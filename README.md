@@ -1,0 +1,331 @@
+# Google Ad Manager MCP Server
+
+An MCP (Model Context Protocol) server for Google Ad Manager that enables AI assistants like Claude to manage ad campaigns, line items, creatives, and more.
+
+## Features
+
+- **Order Management**: List, create, and manage orders
+- **Line Item Management**: Create, duplicate, and configure line items
+- **Creative Management**: Upload images, associate with line items, bulk upload
+- **Advertiser Management**: Find, create, and list advertisers
+- **Verification Tools**: Verify line item setup, check delivery status
+- **Campaign Workflow**: Complete campaign creation in one operation
+
+## Installation
+
+```bash
+cd gam-mcp-server
+pip install -e .
+```
+
+Or with uv:
+
+```bash
+cd gam-mcp-server
+uv pip install -e .
+```
+
+### Dependencies
+
+- **[FastMCP](https://github.com/jlowin/fastmcp)**: MCP server framework with native middleware support
+- **[googleads](https://github.com/googleads/googleads-python-lib)**: Google Ad Manager SOAP API client
+
+## Configuration
+
+The server uses environment variables for configuration:
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `GAM_CREDENTIALS_PATH` | Path to service account JSON | **Yes** |
+| `GAM_NETWORK_CODE` | Ad Manager network code | **Yes** |
+| `GAM_MCP_HOST` | Server host | No (default: `0.0.0.0`) |
+| `GAM_MCP_PORT` | Server port | No (default: `8000`) |
+| `GAM_MCP_AUTH_TOKEN` | Authentication token | No (auto-generated if not set) |
+
+## Authentication
+
+The server implements Bearer token authentication using [FastMCP native middleware](https://gofastmcp.com/python-sdk/fastmcp-server-auth-auth), following [MCP security best practices](https://modelcontextprotocol.io/specification/draft/basic/security_best_practices).
+
+### Security Features
+
+- **FastMCP Native Middleware**: Uses FastMCP 2.x middleware for proper MCP lifecycle management
+- **Cryptographically secure tokens**: Generated using `secrets.token_hex(32)`
+- **Timing attack prevention**: Uses constant-time comparison (`hmac.compare_digest`)
+- **Tool-level authentication**: Auth validated on every tool call
+- **Audit logging**: All authentication failures logged
+
+### How It Works
+
+Authentication is enforced at the tool level using FastMCP's middleware system:
+- When a tool is called, the middleware validates the `Authorization` header
+- If no token is configured (`GAM_MCP_AUTH_TOKEN` not set), requests are allowed
+- Invalid or missing tokens return a `ToolError` with a helpful message
+
+### Setup
+
+For remote deployments, set a fixed authentication token:
+
+```bash
+# Generate a secure token
+python -c "import secrets; print(secrets.token_hex(32))"
+
+# Set it as environment variable
+export GAM_MCP_AUTH_TOKEN="your-generated-token"
+```
+
+If not set, a random token is generated at startup and displayed in the logs.
+
+Clients must include the token in the Authorization header:
+```
+Authorization: Bearer your-generated-token
+```
+
+### Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `/mcp` | MCP protocol endpoint (auth validated on tool calls) |
+
+## Running the Server
+
+### Local Development
+
+```bash
+# Using the installed command
+gam-mcp
+
+# Or directly with Python
+python -m gam_mcp.server
+
+# With custom configuration
+GAM_NETWORK_CODE=12345678 GAM_MCP_PORT=9000 gam-mcp
+```
+
+### Docker Deployment
+
+The Docker image runs as a non-root user (`appuser`) for security.
+
+#### Build the Image
+
+```bash
+docker build -t gam-mcp-server .
+```
+
+#### Run the Container
+
+```bash
+# Basic usage with credentials mounted
+docker run -d \
+  --name gam-mcp \
+  -p 8000:8000 \
+  -v /path/to/your/credentials.json:/app/credentials.json:ro \
+  -e GAM_NETWORK_CODE=YOUR_NETWORK_CODE \
+  gam-mcp-server
+
+# With authentication token (recommended for production)
+docker run -d \
+  --name gam-mcp \
+  -p 8000:8000 \
+  -v /path/to/your/credentials.json:/app/credentials.json:ro \
+  -e GAM_NETWORK_CODE=YOUR_NETWORK_CODE \
+  -e GAM_MCP_AUTH_TOKEN=$(python -c "import secrets; print(secrets.token_hex(32))") \
+  gam-mcp-server
+
+# With custom port
+docker run -d \
+  --name gam-mcp \
+  -p 9000:8000 \
+  -v /path/to/your/credentials.json:/app/credentials.json:ro \
+  -e GAM_NETWORK_CODE=YOUR_NETWORK_CODE \
+  -e GAM_MCP_PORT=8000 \
+  gam-mcp-server
+```
+
+#### View Logs
+
+```bash
+# View startup logs (includes generated auth token if not set)
+docker logs gam-mcp
+
+# Follow logs
+docker logs -f gam-mcp
+```
+
+#### Docker Compose
+
+Create a `docker-compose.yml` file:
+
+```yaml
+version: '3.8'
+services:
+  gam-mcp:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./credentials.json:/app/credentials.json:ro
+    environment:
+      - GAM_NETWORK_CODE=YOUR_NETWORK_CODE
+      - GAM_MCP_AUTH_TOKEN=your-secure-token
+    restart: unless-stopped
+```
+
+Run with:
+```bash
+docker-compose up -d
+```
+
+#### Verify the Container
+
+```bash
+# Check container is running
+docker ps
+
+# Test the endpoint
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc": "2.0", "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "test", "version": "1.0"}}, "id": 1}'
+```
+
+### Cloud Deployment (Railway, Fly.io, etc.)
+
+1. Set environment variables in your cloud provider:
+   - `GAM_CREDENTIALS_PATH`: Path to credentials (or use secrets)
+   - `GAM_NETWORK_CODE`: Your Ad Manager network code
+   - `GAM_MCP_AUTH_TOKEN`: A secure authentication token
+
+2. Deploy using the included Dockerfile
+
+## Connecting to Claude
+
+### Claude Desktop Configuration
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "google-ad-manager": {
+      "url": "http://localhost:8000/mcp"
+    }
+  }
+}
+```
+
+### Remote Server with Authentication
+
+If deploying remotely with authentication enabled:
+
+```json
+{
+  "mcpServers": {
+    "google-ad-manager": {
+      "url": "https://your-server.com/mcp",
+      "headers": {
+        "Authorization": "Bearer your-secure-token"
+      }
+    }
+  }
+}
+```
+
+### Testing with MCP Inspector
+
+```bash
+# Without authentication
+npx @modelcontextprotocol/inspector http://localhost:8000/mcp
+
+# With authentication (set header in Inspector UI)
+# Header: Authorization
+# Value: Bearer your-token
+```
+
+## Available Tools
+
+### Order Tools
+
+| Tool | Description |
+|------|-------------|
+| `list_delivering_orders` | List all orders with delivering line items |
+| `get_order` | Get order details by ID or name |
+| `create_order` | Create a new order |
+| `find_or_create_order` | Find existing or create new order |
+
+### Line Item Tools
+
+| Tool | Description |
+|------|-------------|
+| `get_line_item` | Get line item details |
+| `create_line_item` | Create a new line item |
+| `duplicate_line_item` | Duplicate an existing line item |
+| `update_line_item_name` | Rename a line item |
+| `list_line_items_by_order` | List all line items for an order |
+
+### Creative Tools
+
+| Tool | Description |
+|------|-------------|
+| `upload_creative` | Upload an image creative |
+| `associate_creative_with_line_item` | Associate creative with line item |
+| `upload_and_associate_creative` | Upload and associate in one step |
+| `bulk_upload_creatives` | Upload all creatives from a folder |
+| `get_creative` | Get creative details |
+| `list_creatives_by_advertiser` | List creatives for an advertiser |
+
+### Advertiser Tools
+
+| Tool | Description |
+|------|-------------|
+| `find_advertiser` | Find advertiser by name |
+| `get_advertiser` | Get advertiser details |
+| `list_advertisers` | List all advertisers |
+| `create_advertiser` | Create a new advertiser |
+| `find_or_create_advertiser` | Find or create advertiser |
+
+### Verification Tools
+
+| Tool | Description |
+|------|-------------|
+| `verify_line_item_setup` | Verify line item configuration |
+| `check_line_item_delivery_status` | Check delivery progress |
+| `verify_order_setup` | Verify entire order setup |
+
+### Workflow Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_campaign` | Complete campaign creation workflow |
+
+## Example Usage with Claude
+
+```
+User: List all delivering orders
+
+Claude: [Uses list_delivering_orders tool]
+Here are the currently delivering orders:
+1. Campaign IPhone 17 Pro 2025/2026 (ID: 123456)
+   - Display line item: 45,000 impressions delivered
+
+User: Create a new campaign for "ACME Corp" ending December 31, 2025
+
+Claude: [Uses create_campaign tool]
+I'll create the campaign with:
+- Advertiser: ACME Corp
+- Order: ACME Campaign 2025
+- Line Item: Display
+- End Date: December 31, 2025
+
+Campaign created successfully!
+- Order ID: 789012
+- Line Item ID: 345678
+- 4 creatives uploaded and associated
+```
+
+## API Version
+
+Uses Google Ad Manager SOAP API version `v202411`.
+
+## License
+
+MIT

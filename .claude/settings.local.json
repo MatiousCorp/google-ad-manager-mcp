@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)",
+      "Bash(source:*)",
+      "Bash(GAM_CREDENTIALS_PATH=/Users/youssef/Documents/quid.ma/ad-manager-api-478019-0997a25950aa.json GAM_NETWORK_CODE=31083078 python:*)",
+      "Bash(curl:*)",
+      "Bash(docker run:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
