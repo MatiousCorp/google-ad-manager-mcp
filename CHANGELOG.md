@@ -7,7 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2025-01-01
+## [0.1.3] - 2025-12-19
+
+### Fixed
+
+- Fixed lazy initialization to allow server to start and list tools without credentials
+- Credentials are now only validated when a tool is actually called
+- Fixed duplicate `init_client()` calls in `get_order` function
+- Added missing `init_client()` call to `create_campaign` function
+
+### Changed
+
+- Default transport mode changed from `http` to `stdio` for better CLI/uvx compatibility
+- Updated tests to support lazy initialization behavior
+
+## [0.1.2] - 2025-12-19
+
+### Fixed
+
+- Changed default transport from `http` to `stdio` to fix uvx compatibility
+
+## [0.1.1] - 2025-12-19
+
+### Added
+
+- Added `google-ad-manager-mcp` as alternate executable name for uvx compatibility
+
+## [0.1.0] - 2025-12-19
 
 ### Added
 
@@ -51,5 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Environment-based configuration
   - Comprehensive logging
 
-[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/MatiousCorp/google-ad-manager-mcp/releases/tag/v0.1.0

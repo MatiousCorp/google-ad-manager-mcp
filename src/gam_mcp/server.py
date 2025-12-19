@@ -103,6 +103,7 @@ def list_delivering_orders() -> str:
     Returns a list of orders with their delivering line items,
     including impression and click statistics.
     """
+    init_client()
     result = orders.list_delivering_orders()
     return json.dumps(result, indent=2)
 
@@ -117,6 +118,7 @@ def get_order(order_id: Optional[int] = None, order_name: Optional[str] = None) 
 
     Returns order details including all line items.
     """
+    init_client()
     result = orders.get_order(order_id=order_id, order_name=order_name)
     return json.dumps(result, indent=2)
 
@@ -131,6 +133,7 @@ def create_order(order_name: str, advertiser_id: int) -> str:
 
     Returns the created order details.
     """
+    init_client()
     result = orders.create_order(order_name=order_name, advertiser_id=advertiser_id)
     return json.dumps(result, indent=2)
 
@@ -145,6 +148,7 @@ def find_or_create_order(order_name: str, advertiser_id: int) -> str:
 
     Returns the existing or newly created order.
     """
+    init_client()
     result = orders.find_or_create_order(order_name=order_name, advertiser_id=advertiser_id)
     return json.dumps(result, indent=2)
 
@@ -162,6 +166,7 @@ def get_line_item(line_item_id: int) -> str:
 
     Returns line item details including status, dates, and statistics.
     """
+    init_client()
     result = line_items.get_line_item(line_item_id=line_item_id)
     return json.dumps(result, indent=2)
 
@@ -191,6 +196,7 @@ def create_line_item(
 
     Returns the created line item details.
     """
+    init_client()
     result = line_items.create_line_item(
         order_id=order_id,
         name=name,
@@ -219,6 +225,7 @@ def duplicate_line_item(
 
     Returns both the source and new line item details.
     """
+    init_client()
     result = line_items.duplicate_line_item(
         source_line_item_id=source_line_item_id,
         new_name=new_name,
@@ -237,6 +244,7 @@ def update_line_item_name(line_item_id: int, new_name: str) -> str:
 
     Returns the updated line item details.
     """
+    init_client()
     result = line_items.update_line_item_name(
         line_item_id=line_item_id,
         new_name=new_name
@@ -253,6 +261,7 @@ def list_line_items_by_order(order_id: int) -> str:
 
     Returns list of line items with their status and statistics.
     """
+    init_client()
     result = line_items.list_line_items_by_order(order_id=order_id)
     return json.dumps(result, indent=2)
 
@@ -286,6 +295,7 @@ def upload_creative(
 
     Returns the created creative details.
     """
+    init_client()
     result = creatives.upload_creative(
         file_path=file_path,
         advertiser_id=advertiser_id,
@@ -314,6 +324,7 @@ def associate_creative_with_line_item(
 
     Returns the association details.
     """
+    init_client()
     result = creatives.associate_creative_with_line_item(
         creative_id=creative_id,
         line_item_id=line_item_id,
@@ -342,6 +353,7 @@ def upload_and_associate_creative(
 
     Returns the creative and association details.
     """
+    init_client()
     result = creatives.upload_and_associate_creative(
         file_path=file_path,
         advertiser_id=advertiser_id,
@@ -372,6 +384,7 @@ def bulk_upload_creatives(
     Supported formats: jpg, jpeg, png, gif.
     Returns results for all uploads.
     """
+    init_client()
     result = creatives.bulk_upload_creatives(
         folder_path=folder_path,
         advertiser_id=advertiser_id,
@@ -391,6 +404,7 @@ def get_creative(creative_id: int) -> str:
 
     Returns creative details including size and destination URL.
     """
+    init_client()
     result = creatives.get_creative(creative_id=creative_id)
     return json.dumps(result, indent=2)
 
@@ -405,6 +419,7 @@ def list_creatives_by_advertiser(advertiser_id: int, limit: int = 100) -> str:
 
     Returns list of creatives.
     """
+    init_client()
     result = creatives.list_creatives_by_advertiser(
         advertiser_id=advertiser_id,
         limit=limit
@@ -425,6 +440,7 @@ def find_advertiser(name: str) -> str:
 
     Returns list of matching advertisers.
     """
+    init_client()
     result = advertisers.find_advertiser(name=name)
     return json.dumps(result, indent=2)
 
@@ -438,6 +454,7 @@ def get_advertiser(advertiser_id: int) -> str:
 
     Returns advertiser details.
     """
+    init_client()
     result = advertisers.get_advertiser(advertiser_id=advertiser_id)
     return json.dumps(result, indent=2)
 
@@ -451,6 +468,7 @@ def list_advertisers(limit: int = 100) -> str:
 
     Returns list of advertisers.
     """
+    init_client()
     result = advertisers.list_advertisers(limit=limit)
     return json.dumps(result, indent=2)
 
@@ -470,6 +488,7 @@ def create_advertiser(
 
     Returns the created advertiser details.
     """
+    init_client()
     result = advertisers.create_advertiser(
         name=name,
         email=email,
@@ -488,6 +507,7 @@ def find_or_create_advertiser(name: str, email: Optional[str] = None) -> str:
 
     Returns the existing or newly created advertiser.
     """
+    init_client()
     result = advertisers.find_or_create_advertiser(name=name, email=email)
     return json.dumps(result, indent=2)
 
@@ -510,6 +530,7 @@ def verify_line_item_setup(line_item_id: int) -> str:
 
     Returns verification results with any issues found.
     """
+    init_client()
     result = verification.verify_line_item_setup(line_item_id=line_item_id)
     return json.dumps(result, indent=2)
 
@@ -523,6 +544,7 @@ def check_line_item_delivery_status(line_item_id: int) -> str:
 
     Returns delivery progress including impressions, clicks, and goal progress.
     """
+    init_client()
     result = verification.check_line_item_delivery_status(line_item_id=line_item_id)
     return json.dumps(result, indent=2)
 
@@ -536,6 +558,7 @@ def verify_order_setup(order_id: int) -> str:
 
     Returns comprehensive verification of the order and all its line items.
     """
+    init_client()
     result = verification.verify_order_setup(order_id=order_id)
     return json.dumps(result, indent=2)
 
@@ -580,6 +603,7 @@ def create_campaign(
 
     Returns complete campaign creation results.
     """
+    init_client()
     result = {
         "advertiser": None,
         "order": None,
@@ -645,7 +669,15 @@ def create_campaign(
 
 
 def init_client():
-    """Initialize the GAM client from environment variables."""
+    """Initialize the GAM client from environment variables.
+
+    This is called lazily when the first tool is executed, not at server startup.
+    This allows the server to start and list tools even without credentials.
+    """
+    # Check if already initialized
+    if get_gam_client() is not None:
+        return
+
     credentials_path = os.environ.get("GAM_CREDENTIALS_PATH")
     if not credentials_path:
         raise ValueError(
@@ -672,12 +704,10 @@ def main():
     """Main entry point for the MCP server."""
     global AUTH_TOKEN
 
-    # Get transport mode from environment (default: http)
-    transport = os.environ.get("GAM_MCP_TRANSPORT", "http").lower()
+    # Get transport mode from environment (default: stdio for CLI usage)
+    transport = os.environ.get("GAM_MCP_TRANSPORT", "stdio").lower()
     host = os.environ.get("GAM_MCP_HOST", "0.0.0.0")
     port = int(os.environ.get("GAM_MCP_PORT", "8000"))
-
-    init_client()
 
     if transport == "stdio":
         # Stdio transport - no auth token needed (local process)

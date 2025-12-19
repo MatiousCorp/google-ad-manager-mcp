@@ -1,6 +1,6 @@
 [project]
 name = "google-ad-manager-mcp"
-version = "0.1.0"
+version = "0.1.3"
 description = "Google Ad Manager MCP Server - An MCP server for managing ad campaigns, line items, creatives, and more"
 readme = "README.md"
 license = {text = "MIT"}
@@ -56,6 +56,7 @@ dev = [
 
 [project.scripts]
 gam-mcp = "gam_mcp.server:main"
+google-ad-manager-mcp = "gam_mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]
