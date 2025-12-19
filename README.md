@@ -1,6 +1,28 @@
 # Google Ad Manager MCP Server
 
-An MCP (Model Context Protocol) server for Google Ad Manager that enables AI assistants like Claude to manage ad campaigns, line items, creatives, and more.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![MCP](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io/)
+
+> **Automate Google Ad Manager with AI.** An MCP server that lets Claude manage your ad campaigns, line items, creatives, and more through natural language.
+
+<p align="center">
+  <strong>Built by <a href="https://matious.com">Matious</a></strong> — We build custom AI tools and MCP servers for businesses.
+</p>
+
+---
+
+## Why This Exists
+
+Managing Google Ad Manager is tedious. Creating campaigns, uploading creatives, and configuring line items involves countless clicks through a complex UI.
+
+**This MCP server changes that.** Connect it to Claude and manage your entire ad operations through conversation:
+
+- *"Create a new campaign for Nike ending December 31st"*
+- *"Upload all creatives from this folder and associate them with the Display line item"*
+- *"Check which orders are currently delivering"*
+
+No more clicking. Just tell Claude what you need.
 
 ## Features
 
@@ -403,3 +425,18 @@ Uses Google Ad Manager SOAP API version `v202411`.
 ## License
 
 MIT - see [LICENSE](LICENSE) for details.
+
+---
+
+## Need a Custom MCP Server?
+
+This project is built and maintained by **[Matious](https://matious.com)**.
+
+We specialize in building custom AI tools and MCP servers that integrate with your existing systems. Whether you need to connect Claude to your CRM, ERP, ad platforms, or internal tools — we can help.
+
+**What we build:**
+- Custom MCP servers for any API or platform
+- AI-powered automation workflows
+- Claude integrations for business operations
+
+**Get in touch:** [matious.com](https://matious.com)

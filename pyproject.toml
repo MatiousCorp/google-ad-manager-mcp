@@ -40,10 +40,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/MatiousCorp/gam-mcp-server"
+Homepage = "https://matious.com"
 Repository = "https://github.com/MatiousCorp/gam-mcp-server"
 Issues = "https://github.com/MatiousCorp/gam-mcp-server/issues"
 Documentation = "https://github.com/MatiousCorp/gam-mcp-server#readme"
+"Custom Development" = "https://matious.com"
 
 [project.optional-dependencies]
 dev = [
