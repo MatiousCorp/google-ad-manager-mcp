@@ -1,4 +1,4 @@
-"""Google Ad Manager MCP Server with HTTP/SSE transport.
+"""Google Ad Manager MCP Server with HTTP/SSE and stdio transport.
 
 Security: Implements Bearer token authentication following MCP security best practices.
 - Uses FastMCP native middleware for proper lifecycle management
@@ -672,26 +672,36 @@ def main():
     """Main entry point for the MCP server."""
     global AUTH_TOKEN
 
+    # Get transport mode from environment (default: http)
+    transport = os.environ.get("GAM_MCP_TRANSPORT", "http").lower()
+    host = os.environ.get("GAM_MCP_HOST", "0.0.0.0")
+    port = int(os.environ.get("GAM_MCP_PORT", "8000"))
+
     init_client()
 
-    # Generate or display auth token
-    if AUTH_TOKEN is None:
-        AUTH_TOKEN = secrets.token_hex(32)
-        logger.info("Generated auth token (set GAM_MCP_AUTH_TOKEN env var to use a fixed token)")
+    if transport == "stdio":
+        # Stdio transport - no auth token needed (local process)
+        logger.info("Starting GAM MCP Server with stdio transport")
+        mcp.run(transport="stdio")
+    else:
+        # HTTP transport - set up auth token
+        if AUTH_TOKEN is None:
+            AUTH_TOKEN = secrets.token_hex(32)
+            logger.info("Generated auth token (set GAM_MCP_AUTH_TOKEN env var to use a fixed token)")
 
-    logger.info("")
-    logger.info("=" * 60)
-    logger.info("GAM MCP Server Authentication Token:")
-    logger.info(AUTH_TOKEN)
-    logger.info("=" * 60)
-    logger.info("")
-    logger.info("Use this token in the Authorization header:")
-    logger.info(f"Authorization: Bearer {AUTH_TOKEN}")
-    logger.info("")
+        logger.info("")
+        logger.info("=" * 60)
+        logger.info("GAM MCP Server Authentication Token:")
+        logger.info(AUTH_TOKEN)
+        logger.info("=" * 60)
+        logger.info("")
+        logger.info("Use this token in the Authorization header:")
+        logger.info(f"Authorization: Bearer {AUTH_TOKEN}")
+        logger.info("")
 
-    # Run using FastMCP's native runner (proper lifecycle management)
-    logger.info("Starting GAM MCP Server on http://0.0.0.0:8000/mcp")
-    mcp.run(transport="http", host="0.0.0.0", port=8000, path="/mcp")
+        # Run using FastMCP's native runner (proper lifecycle management)
+        logger.info(f"Starting GAM MCP Server on http://{host}:{port}/mcp")
+        mcp.run(transport="http", host=host, port=port, path="/mcp")
 
 
 if __name__ == "__main__":

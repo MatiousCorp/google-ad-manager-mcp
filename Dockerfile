@@ -19,8 +19,10 @@ RUN chown -R appuser:appgroup /app
 # Environment variables (required - must be set at runtime)
 # GAM_CREDENTIALS_PATH: Path to service account JSON (default: /app/credentials.json if mounting)
 # GAM_NETWORK_CODE: Your Google Ad Manager network code (REQUIRED)
-# GAM_MCP_AUTH_TOKEN: Authentication token (generate with: python -c "import secrets; print(secrets.token_hex(32))")
+# GAM_MCP_TRANSPORT: Transport mode - "stdio" or "http" (default: http)
+# GAM_MCP_AUTH_TOKEN: Authentication token for HTTP mode (generate with: python -c "import secrets; print(secrets.token_hex(32))")
 ENV GAM_CREDENTIALS_PATH=/app/credentials.json
+ENV GAM_MCP_TRANSPORT=stdio
 ENV GAM_MCP_HOST=0.0.0.0
 ENV GAM_MCP_PORT=8000
 

@@ -60,9 +60,10 @@ The server uses environment variables for configuration:
 |----------|-------------|----------|
 | `GAM_CREDENTIALS_PATH` | Path to service account JSON | **Yes** |
 | `GAM_NETWORK_CODE` | Ad Manager network code | **Yes** |
-| `GAM_MCP_HOST` | Server host | No (default: `0.0.0.0`) |
-| `GAM_MCP_PORT` | Server port | No (default: `8000`) |
-| `GAM_MCP_AUTH_TOKEN` | Authentication token | No (auto-generated if not set) |
+| `GAM_MCP_TRANSPORT` | Transport mode: `stdio` or `http` | No (default: `stdio` in Docker, `http` otherwise) |
+| `GAM_MCP_HOST` | Server host (HTTP mode only) | No (default: `0.0.0.0`) |
+| `GAM_MCP_PORT` | Server port (HTTP mode only) | No (default: `8000`) |
+| `GAM_MCP_AUTH_TOKEN` | Authentication token (HTTP mode only) | No (auto-generated if not set) |
 
 ## Authentication
 
@@ -221,9 +222,32 @@ curl -X POST http://localhost:8000/mcp \
 
 ## Connecting to AI Assistants
 
-### Claude Desktop
+### Claude Desktop (Docker - Recommended)
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "google-ad-manager": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GAM_NETWORK_CODE",
+        "-v", "/path/to/credentials.json:/app/credentials.json:ro",
+        "google-ad-manager-mcp"
+      ],
+      "env": {
+        "GAM_NETWORK_CODE": "YOUR_NETWORK_CODE"
+      }
+    }
+  }
+}
+```
+
+### Claude Desktop (HTTP Mode)
+
+If running the server in HTTP mode:
 
 ```json
 {
