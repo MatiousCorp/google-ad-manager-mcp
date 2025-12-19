@@ -10,7 +10,7 @@ Please be respectful and constructive in all interactions. We welcome contributo
 
 ### Reporting Bugs
 
-1. Check existing [issues](https://github.com/MatiousCorp/gam-mcp-server/issues) to avoid duplicates
+1. Check existing [issues](https://github.com/MatiousCorp/google-ad-manager-mcp/issues) to avoid duplicates
 2. Create a new issue with:
    - Clear, descriptive title
    - Steps to reproduce
@@ -47,8 +47,8 @@ Please be respectful and constructive in all interactions. We welcome contributo
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/gam-mcp-server.git
-cd gam-mcp-server
+git clone https://github.com/YOUR_USERNAME/google-ad-manager-mcp.git
+cd google-ad-manager-mcp
 
 # Create virtual environment
 python -m venv venv

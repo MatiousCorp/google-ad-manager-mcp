@@ -1,5 +1,5 @@
 [project]
-name = "gam-mcp-server"
+name = "google-ad-manager-mcp"
 version = "0.1.0"
 description = "Google Ad Manager MCP Server - An MCP server for managing ad campaigns, line items, creatives, and more"
 readme = "README.md"
@@ -41,9 +41,9 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://matious.com"
-Repository = "https://github.com/MatiousCorp/gam-mcp-server"
-Issues = "https://github.com/MatiousCorp/gam-mcp-server/issues"
-Documentation = "https://github.com/MatiousCorp/gam-mcp-server#readme"
+Repository = "https://github.com/MatiousCorp/google-ad-manager-mcp"
+Issues = "https://github.com/MatiousCorp/google-ad-manager-mcp/issues"
+Documentation = "https://github.com/MatiousCorp/google-ad-manager-mcp#readme"
 "Custom Development" = "https://matious.com"
 
 [project.optional-dependencies]

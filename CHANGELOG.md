@@ -51,5 +51,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Environment-based configuration
   - Comprehensive logging
 
-[Unreleased]: https://github.com/MatiousCorp/gam-mcp-server/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/MatiousCorp/gam-mcp-server/releases/tag/v0.1.0
+[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/MatiousCorp/google-ad-manager-mcp/releases/tag/v0.1.0

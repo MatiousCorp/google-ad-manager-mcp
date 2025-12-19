@@ -4,7 +4,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io/)
 
-> **Automate Google Ad Manager with AI.** An MCP server that lets Claude manage your ad campaigns, line items, creatives, and more through natural language.
+> **Automate Google Ad Manager with AI.** An MCP server that lets AI assistants like Claude, ChatGPT, Gemini, Cursor, and VS Code manage your ad campaigns, line items, creatives, and more through natural language.
 
 <p align="center">
   <strong>Built by <a href="https://matious.com">Matious</a></strong> — We build custom AI tools and MCP servers for businesses.
@@ -36,14 +36,14 @@ No more clicking. Just tell Claude what you need.
 ## Installation
 
 ```bash
-cd gam-mcp-server
+cd google-ad-manager-mcp
 pip install -e .
 ```
 
 Or with uv:
 
 ```bash
-cd gam-mcp-server
+cd google-ad-manager-mcp
 uv pip install -e .
 ```
 
@@ -130,7 +130,7 @@ The Docker image runs as a non-root user (`appuser`) for security.
 #### Build the Image
 
 ```bash
-docker build -t gam-mcp-server .
+docker build -t google-ad-manager-mcp .
 ```
 
 #### Run the Container
@@ -142,7 +142,7 @@ docker run -d \
   -p 8000:8000 \
   -v /path/to/your/credentials.json:/app/credentials.json:ro \
   -e GAM_NETWORK_CODE=YOUR_NETWORK_CODE \
-  gam-mcp-server
+  google-ad-manager-mcp
 
 # With authentication token (recommended for production)
 docker run -d \
@@ -151,7 +151,7 @@ docker run -d \
   -v /path/to/your/credentials.json:/app/credentials.json:ro \
   -e GAM_NETWORK_CODE=YOUR_NETWORK_CODE \
   -e GAM_MCP_AUTH_TOKEN=$(python -c "import secrets; print(secrets.token_hex(32))") \
-  gam-mcp-server
+  google-ad-manager-mcp
 
 # With custom port
 docker run -d \
@@ -160,7 +160,7 @@ docker run -d \
   -v /path/to/your/credentials.json:/app/credentials.json:ro \
   -e GAM_NETWORK_CODE=YOUR_NETWORK_CODE \
   -e GAM_MCP_PORT=8000 \
-  gam-mcp-server
+  google-ad-manager-mcp
 ```
 
 #### View Logs
@@ -219,9 +219,9 @@ curl -X POST http://localhost:8000/mcp \
 
 2. Deploy using the included Dockerfile
 
-## Connecting to Claude
+## Connecting to AI Assistants
 
-### Claude Desktop Configuration
+### Claude Desktop
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
@@ -251,6 +251,17 @@ If deploying remotely with authentication enabled:
   }
 }
 ```
+
+### Other MCP Clients
+
+This server works with any MCP-compatible client, including:
+
+- **ChatGPT Desktop** - OpenAI adopted MCP in March 2025
+- **Cursor** - AI-powered IDE with MCP support
+- **VS Code** - Via MCP extensions
+- **Windsurf, Zed, Codeium** - Various IDE integrations
+
+Refer to each client's documentation for MCP server configuration.
 
 ### Testing with MCP Inspector
 
@@ -350,8 +361,8 @@ Campaign created successfully!
 
 ```bash
 # Clone the repository
-git clone https://github.com/MatiousCorp/gam-mcp-server.git
-cd gam-mcp-server
+git clone https://github.com/MatiousCorp/google-ad-manager-mcp.git
+cd google-ad-manager-mcp
 
 # Install with dev dependencies
 pip install -e ".[dev]"
@@ -408,7 +419,7 @@ The following features are planned for future releases:
 
 ### Community Requests
 
-Have a feature request? [Open an issue](https://github.com/MatiousCorp/gam-mcp-server/issues) to suggest new functionality.
+Have a feature request? [Open an issue](https://github.com/MatiousCorp/google-ad-manager-mcp/issues) to suggest new functionality.
 
 ## Contributing
 
