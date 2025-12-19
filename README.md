@@ -322,10 +322,84 @@ Campaign created successfully!
 - 4 creatives uploaded and associated
 ```
 
+## Development
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/MatiousCorp/gam-mcp-server.git
+cd gam-mcp-server
+
+# Install with dev dependencies
+pip install -e ".[dev]"
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=gam_mcp --cov-report=html
+
+# Run specific test file
+pytest tests/test_utils.py
+```
+
+### Code Quality
+
+```bash
+# Run linter
+ruff check .
+
+# Run linter with auto-fix
+ruff check . --fix
+```
+
+## Roadmap
+
+The following features are planned for future releases:
+
+### Near-term
+
+- [ ] **Ad Unit Management** - List, get, and create ad units with hierarchy support
+- [ ] **Placement Management** - Manage inventory placements and targeting
+- [ ] **Line Item Status Control** - Pause, resume, archive, and approve line items
+- [ ] **Forecast & Availability** - Check inventory availability and forecast impressions
+- [ ] **Creative Preview Links** - Generate preview URLs for creative-line item combinations
+
+### Medium-term
+
+- [ ] **Advanced Targeting** - Geographic, device, daypart, and custom key-value targeting
+- [ ] **Reporting Tools** - Generate and retrieve performance reports
+- [ ] **Bulk Operations** - Batch updates for line items, creatives, and targeting
+- [ ] **HTML5/Video Creatives** - Support for rich media and video creative uploads
+
+### Long-term
+
+- [ ] **Audience Management** - Create and manage audience segments
+- [ ] **User & Permissions** - Manage users, roles, and order assignments
+- [ ] **Yield Management** - Configure yield groups and optimization
+- [ ] **Custom Reporting** - Scheduled reports with export capabilities
+
+### Community Requests
+
+Have a feature request? [Open an issue](https://github.com/MatiousCorp/gam-mcp-server/issues) to suggest new functionality.
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history.
+
 ## API Version
 
 Uses Google Ad Manager SOAP API version `v202411`.
 
 ## License
 
-MIT
+MIT - see [LICENSE](LICENSE) for details.

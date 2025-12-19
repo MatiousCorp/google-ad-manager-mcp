@@ -173,8 +173,8 @@ def create_line_item(
     end_year: int,
     end_month: int,
     end_day: int,
+    target_ad_unit_id: str,
     line_item_type: str = "STANDARD",
-    target_ad_unit_id: str = "30083198",
     goal_impressions: int = 100000
 ) -> str:
     """Create a new line item for an order.
@@ -185,8 +185,8 @@ def create_line_item(
         end_year: End date year (e.g., 2025)
         end_month: End date month (1-12)
         end_day: End date day (1-31)
+        target_ad_unit_id: Ad unit ID to target (find via GAM UI or ad unit tools)
         line_item_type: Type of line item (STANDARD, SPONSORSHIP, etc.)
-        target_ad_unit_id: Ad unit ID to target (default: 30083198)
         goal_impressions: Impression goal (default: 100000)
 
     Returns the created line item details.
@@ -554,8 +554,8 @@ def create_campaign(
     end_day: int,
     creatives_folder: str,
     click_through_url: str,
-    goal_impressions: int = 100000,
-    target_ad_unit_id: str = "30083198"
+    target_ad_unit_id: str,
+    goal_impressions: int = 100000
 ) -> str:
     """Create a complete campaign: find/create advertiser, order, line item, and upload creatives.
 
@@ -568,8 +568,8 @@ def create_campaign(
         end_day: End date day (1-31)
         creatives_folder: Path to folder containing creative images
         click_through_url: Destination URL for all creatives
+        target_ad_unit_id: Ad unit ID to target (find via GAM UI or ad unit tools)
         goal_impressions: Impression goal (default: 100000)
-        target_ad_unit_id: Ad unit ID to target (default: 30083198)
 
     This is a complete workflow that:
     1. Finds or creates the advertiser

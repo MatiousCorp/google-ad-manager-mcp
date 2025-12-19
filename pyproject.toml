@@ -1,13 +1,56 @@
 [project]
 name = "gam-mcp-server"
 version = "0.1.0"
-description = "Google Ad Manager MCP Server"
+description = "Google Ad Manager MCP Server - An MCP server for managing ad campaigns, line items, creatives, and more"
 readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.10"
+authors = [
+    {name = "Youssef Boussafa", email = "youssef@matious.com"},
+]
+maintainers = [
+    {name = "Youssef Boussafa", email = "youssef@matious.com"},
+]
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "google-ad-manager",
+    "gam",
+    "advertising",
+    "ad-tech",
+    "claude",
+    "ai-assistant",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP",
+]
 dependencies = [
     "fastmcp>=2.14.0,<3.0.0",
     "googleads>=48.0.0,<49.0.0",
     "httpx>=0.28.0,<1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/MatiousCorp/gam-mcp-server"
+Repository = "https://github.com/MatiousCorp/gam-mcp-server"
+Issues = "https://github.com/MatiousCorp/gam-mcp-server/issues"
+Documentation = "https://github.com/MatiousCorp/gam-mcp-server#readme"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.8.0",
 ]
 
 [project.scripts]
@@ -19,3 +62,27 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/gam_mcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.coverage.run]
+source = ["src/gam_mcp"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

@@ -80,8 +80,8 @@ def create_line_item(
     end_year: int,
     end_month: int,
     end_day: int,
+    target_ad_unit_id: str,
     line_item_type: str = "STANDARD",
-    target_ad_unit_id: str = "30083198",
     goal_impressions: int = 100000,
     creative_sizes: Optional[List[dict]] = None,
     cost_per_unit_micro: int = 0,
@@ -95,8 +95,8 @@ def create_line_item(
         end_year: End date year
         end_month: End date month
         end_day: End date day
+        target_ad_unit_id: Ad unit ID to target (required, find via GAM UI)
         line_item_type: Type (STANDARD, SPONSORSHIP, etc.)
-        target_ad_unit_id: Ad unit ID to target
         goal_impressions: Impression goal
         creative_sizes: List of size dicts (optional, uses defaults if not provided)
         cost_per_unit_micro: Cost in micro amounts
