@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2025-12-22
+
+### Fixed
+
+- Fixed RuntimeError when calling tools: `init_client()` was incorrectly using `get_gam_client()` which throws an error when client is not initialized
+- Added `is_gam_client_initialized()` helper function to properly check initialization state
+
 ## [0.1.3] - 2025-12-19
 
 ### Fixed
@@ -77,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Environment-based configuration
   - Comprehensive logging
 
-[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.0...v0.1.1

@@ -133,9 +133,9 @@ class TestConstantTimeComparison:
 class TestServerInitialization:
     """Tests for server initialization."""
 
-    @patch("gam_mcp.server.get_gam_client", return_value=None)
+    @patch("gam_mcp.server.is_gam_client_initialized", return_value=False)
     @patch("gam_mcp.server.init_gam_client")
-    def test_init_client_requires_credentials_path(self, mock_init, mock_get_client):
+    def test_init_client_requires_credentials_path(self, mock_init, mock_is_init):
         """Test init_client raises error when credentials path missing."""
         from gam_mcp.server import init_client
 
@@ -145,9 +145,9 @@ class TestServerInitialization:
 
             assert "GAM_CREDENTIALS_PATH" in str(exc_info.value)
 
-    @patch("gam_mcp.server.get_gam_client", return_value=None)
+    @patch("gam_mcp.server.is_gam_client_initialized", return_value=False)
     @patch("gam_mcp.server.init_gam_client")
-    def test_init_client_requires_network_code(self, mock_init, mock_get_client):
+    def test_init_client_requires_network_code(self, mock_init, mock_is_init):
         """Test init_client raises error when network code missing."""
         from gam_mcp.server import init_client
 
@@ -157,9 +157,9 @@ class TestServerInitialization:
 
             assert "GAM_NETWORK_CODE" in str(exc_info.value)
 
-    @patch("gam_mcp.server.get_gam_client", return_value=None)
+    @patch("gam_mcp.server.is_gam_client_initialized", return_value=False)
     @patch("gam_mcp.server.init_gam_client")
-    def test_init_client_success(self, mock_init, mock_get_client):
+    def test_init_client_success(self, mock_init, mock_is_init):
         """Test init_client succeeds with required env vars."""
         from gam_mcp.server import init_client
 
@@ -175,14 +175,11 @@ class TestServerInitialization:
                 application_name='GAM MCP Server'
             )
 
-    @patch("gam_mcp.server.get_gam_client")
+    @patch("gam_mcp.server.is_gam_client_initialized", return_value=True)
     @patch("gam_mcp.server.init_gam_client")
-    def test_init_client_skips_when_already_initialized(self, mock_init, mock_get_client):
+    def test_init_client_skips_when_already_initialized(self, mock_init, mock_is_init):
         """Test init_client skips initialization if client already exists."""
         from gam_mcp.server import init_client
-
-        # Return a mock client to simulate already initialized
-        mock_get_client.return_value = MagicMock()
 
         init_client()
 

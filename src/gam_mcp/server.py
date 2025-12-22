@@ -23,7 +23,7 @@ from fastmcp.server.middleware import Middleware
 from fastmcp.server.dependencies import get_http_headers
 from fastmcp.exceptions import ToolError
 
-from .client import init_gam_client, get_gam_client
+from .client import init_gam_client, get_gam_client, is_gam_client_initialized
 from .tools import orders, line_items, creatives, advertisers, verification
 
 # Authentication token - set via environment variable or generate random
@@ -675,7 +675,7 @@ def init_client():
     This allows the server to start and list tools even without credentials.
     """
     # Check if already initialized
-    if get_gam_client() is not None:
+    if is_gam_client_initialized():
         return
 
     credentials_path = os.environ.get("GAM_CREDENTIALS_PATH")

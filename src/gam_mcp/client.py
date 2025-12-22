@@ -81,6 +81,15 @@ class GAMClient:
 _gam_client: Optional[GAMClient] = None
 
 
+def is_gam_client_initialized() -> bool:
+    """Check if the GAM client has been initialized.
+
+    Returns:
+        True if the client is initialized, False otherwise
+    """
+    return _gam_client is not None
+
+
 def get_gam_client() -> GAMClient:
     """Get the global GAM client instance.
 
