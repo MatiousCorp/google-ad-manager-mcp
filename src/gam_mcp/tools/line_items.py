@@ -333,3 +333,107 @@ def list_line_items_by_order(order_id: int) -> dict:
         "line_items": line_items,
         "total": len(line_items)
     }
+
+
+def _perform_line_item_action(line_item_id: int, action_type: str) -> dict:
+    """Perform an action on a line item.
+
+    Args:
+        line_item_id: The line item ID
+        action_type: Action to perform (PauseLineItems, ResumeLineItems,
+                     ArchiveLineItems, ApproveLineItems)
+
+    Returns:
+        dict with action result
+    """
+    client = get_gam_client()
+    line_item_service = client.get_service('LineItemService')
+
+    # Build statement for the specific line item
+    statement = client.create_statement()
+    statement = statement.Where("id = :id").WithBindVariable('id', line_item_id)
+
+    # Create the action object
+    action = {'xsi_type': action_type}
+
+    # Perform the action
+    result = line_item_service.performLineItemAction(
+        action,
+        statement.ToStatement()
+    )
+
+    if result and safe_get(result, 'numChanges', 0) > 0:
+        # Fetch updated line item to return current status
+        response = line_item_service.getLineItemsByStatement(statement.ToStatement())
+        if 'results' in response and len(response['results']) > 0:
+            li = response['results'][0]
+            return {
+                "success": True,
+                "id": safe_get(li, 'id'),
+                "name": safe_get(li, 'name'),
+                "status": safe_get(li, 'status'),
+                "action": action_type,
+                "message": f"Line item {line_item_id} action '{action_type}' completed successfully"
+            }
+
+    return {
+        "success": False,
+        "id": line_item_id,
+        "action": action_type,
+        "error": f"Failed to perform action '{action_type}' on line item {line_item_id}. "
+                 "The line item may not be in a valid state for this action."
+    }
+
+
+def pause_line_item(line_item_id: int) -> dict:
+    """Pause a delivering line item.
+
+    Args:
+        line_item_id: The line item ID to pause
+
+    Returns:
+        dict with result of the pause action
+    """
+    return _perform_line_item_action(line_item_id, 'PauseLineItems')
+
+
+def resume_line_item(line_item_id: int) -> dict:
+    """Resume a paused line item.
+
+    Args:
+        line_item_id: The line item ID to resume
+
+    Returns:
+        dict with result of the resume action
+    """
+    return _perform_line_item_action(line_item_id, 'ResumeLineItems')
+
+
+def archive_line_item(line_item_id: int) -> dict:
+    """Archive a line item.
+
+    Archived line items are hidden from the default UI views but can still
+    be retrieved via API. This action cannot be undone via API.
+
+    Args:
+        line_item_id: The line item ID to archive
+
+    Returns:
+        dict with result of the archive action
+    """
+    return _perform_line_item_action(line_item_id, 'ArchiveLineItems')
+
+
+def approve_line_item(line_item_id: int) -> dict:
+    """Approve a line item that requires approval.
+
+    This is used when the approval workflow is enabled in GAM.
+    Line items in NEEDS_APPROVAL status can be approved to start delivery.
+
+    Args:
+        line_item_id: The line item ID to approve
+
+    Returns:
+        dict with result of the approve action
+    """
+    return _perform_line_item_action(line_item_id, 'ApproveLineItems')

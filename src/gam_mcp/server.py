@@ -24,7 +24,7 @@ from fastmcp.server.dependencies import get_http_headers
 from fastmcp.exceptions import ToolError
 
 from .client import init_gam_client, get_gam_client, is_gam_client_initialized
-from .tools import orders, line_items, creatives, advertisers, verification
+from .tools import orders, line_items, creatives, advertisers, verification, reporting
 
 # Authentication token - set via environment variable or generate random
 AUTH_TOKEN = os.environ.get("GAM_MCP_AUTH_TOKEN", None)
@@ -180,7 +180,10 @@ def create_line_item(
     end_day: int,
     target_ad_unit_id: str,
     line_item_type: str = "STANDARD",
-    goal_impressions: int = 100000
+    goal_impressions: int = 100000,
+    creative_sizes: Optional[str] = None,
+    cost_per_unit_micro: int = 0,
+    currency_code: str = "MAD"
 ) -> str:
     """Create a new line item for an order.
 
@@ -191,12 +194,36 @@ def create_line_item(
         end_month: End date month (1-12)
         end_day: End date day (1-31)
         target_ad_unit_id: Ad unit ID to target (find via GAM UI or ad unit tools)
-        line_item_type: Type of line item (STANDARD, SPONSORSHIP, etc.)
+        line_item_type: Type of line item. Valid types:
+            - SPONSORSHIP: Guaranteed, time-based (100% share of voice)
+            - STANDARD: Guaranteed, goal-based (specific number of impressions)
+            - NETWORK: Non-guaranteed, run-of-network
+            - BULK: Non-guaranteed, volume-based
+            - PRICE_PRIORITY: Non-guaranteed, competes on price
+            - HOUSE: Internal/house ads (lowest priority)
+            - CLICK_TRACKING: For tracking clicks only
+            - ADSENSE: AdSense backfill
+            - AD_EXCHANGE: Ad Exchange backfill
+            - BUMPER: Short video bumper ads
+            - PREFERRED_DEAL: Programmatic preferred deals
         goal_impressions: Impression goal (default: 100000)
+        creative_sizes: JSON string of sizes, e.g. '[{"width": 300, "height": 250}, {"width": 728, "height": 90}]'
+                       If not provided, uses defaults: 300x250, 300x600, 728x90, 1000x250
+        cost_per_unit_micro: Cost per unit in micro amounts (e.g., 1000000 = 1 MAD)
+        currency_code: Currency code (default: MAD)
 
     Returns the created line item details.
     """
     init_client()
+
+    # Parse creative_sizes JSON if provided
+    parsed_sizes = None
+    if creative_sizes:
+        try:
+            parsed_sizes = json.loads(creative_sizes)
+        except json.JSONDecodeError as e:
+            return json.dumps({"error": f"Invalid creative_sizes JSON: {e}"}, indent=2)
+
     result = line_items.create_line_item(
         order_id=order_id,
         name=name,
@@ -205,7 +232,10 @@ def create_line_item(
         end_day=end_day,
         line_item_type=line_item_type,
         target_ad_unit_id=target_ad_unit_id,
-        goal_impressions=goal_impressions
+        goal_impressions=goal_impressions,
+        creative_sizes=parsed_sizes,
+        cost_per_unit_micro=cost_per_unit_micro,
+        currency_code=currency_code
     )
     return json.dumps(result, indent=2)
 
@@ -263,6 +293,75 @@ def list_line_items_by_order(order_id: int) -> str:
     """
     init_client()
     result = line_items.list_line_items_by_order(order_id=order_id)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def pause_line_item(line_item_id: int) -> str:
+    """Pause a delivering line item.
+
+    Pausing stops the line item from delivering ads. The line item
+    can be resumed later with resume_line_item.
+
+    Args:
+        line_item_id: The line item ID to pause
+
+    Returns the result of the pause action including new status.
+    """
+    init_client()
+    result = line_items.pause_line_item(line_item_id=line_item_id)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def resume_line_item(line_item_id: int) -> str:
+    """Resume a paused line item.
+
+    Resuming allows a previously paused line item to start
+    delivering ads again based on its schedule and targeting.
+
+    Args:
+        line_item_id: The line item ID to resume
+
+    Returns the result of the resume action including new status.
+    """
+    init_client()
+    result = line_items.resume_line_item(line_item_id=line_item_id)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def archive_line_item(line_item_id: int) -> str:
+    """Archive a line item.
+
+    Archived line items are hidden from the default UI views but can
+    still be retrieved via API. This is useful for cleaning up old
+    campaigns. Note: This action cannot be undone via API.
+
+    Args:
+        line_item_id: The line item ID to archive
+
+    Returns the result of the archive action including new status.
+    """
+    init_client()
+    result = line_items.archive_line_item(line_item_id=line_item_id)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def approve_line_item(line_item_id: int) -> str:
+    """Approve a line item that requires approval.
+
+    This is used when the approval workflow is enabled in Google Ad Manager.
+    Line items in NEEDS_APPROVAL status can be approved to allow delivery.
+
+    Args:
+        line_item_id: The line item ID to approve
+
+    Returns the result of the approve action including new status.
+    """
+    init_client()
+    result = line_items.approve_line_item(line_item_id=line_item_id)
     return json.dumps(result, indent=2)
 
 
@@ -564,6 +663,177 @@ def verify_order_setup(order_id: int) -> str:
 
 
 # =============================================================================
+# REPORTING TOOLS
+# =============================================================================
+
+@mcp.tool()
+def run_delivery_report(
+    date_range_type: str = "LAST_WEEK",
+    start_year: Optional[int] = None,
+    start_month: Optional[int] = None,
+    start_day: Optional[int] = None,
+    end_year: Optional[int] = None,
+    end_month: Optional[int] = None,
+    end_day: Optional[int] = None,
+    order_id: Optional[int] = None,
+    line_item_id: Optional[int] = None,
+    include_date_breakdown: bool = True,
+    timeout_seconds: int = 120
+) -> str:
+    """Run a delivery report for orders and line items.
+
+    Returns impressions, clicks, CTR, and revenue broken down by order and line item.
+
+    Args:
+        date_range_type: Date range for the report. Valid values:
+            - TODAY, YESTERDAY, LAST_WEEK, LAST_MONTH, LAST_3_MONTHS, REACH_LIFETIME
+            - CUSTOM_DATE (requires start and end date parameters)
+        start_year: Start date year (required if date_range_type is CUSTOM_DATE)
+        start_month: Start date month 1-12 (required if date_range_type is CUSTOM_DATE)
+        start_day: Start date day 1-31 (required if date_range_type is CUSTOM_DATE)
+        end_year: End date year (required if date_range_type is CUSTOM_DATE)
+        end_month: End date month 1-12 (required if date_range_type is CUSTOM_DATE)
+        end_day: End date day 1-31 (required if date_range_type is CUSTOM_DATE)
+        order_id: Optional order ID to filter by
+        line_item_id: Optional line item ID to filter by
+        include_date_breakdown: If True, includes daily breakdown (default: True)
+        timeout_seconds: Maximum time to wait for report (default: 120)
+
+    Returns report data with impressions, clicks, CTR, and revenue statistics.
+    """
+    init_client()
+    result = reporting.run_delivery_report(
+        date_range_type=date_range_type,
+        start_year=start_year,
+        start_month=start_month,
+        start_day=start_day,
+        end_year=end_year,
+        end_month=end_month,
+        end_day=end_day,
+        order_id=order_id,
+        line_item_id=line_item_id,
+        include_date_breakdown=include_date_breakdown,
+        timeout_seconds=timeout_seconds
+    )
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def run_inventory_report(
+    date_range_type: str = "LAST_WEEK",
+    start_year: Optional[int] = None,
+    start_month: Optional[int] = None,
+    start_day: Optional[int] = None,
+    end_year: Optional[int] = None,
+    end_month: Optional[int] = None,
+    end_day: Optional[int] = None,
+    ad_unit_id: Optional[str] = None,
+    include_date_breakdown: bool = True,
+    timeout_seconds: int = 120
+) -> str:
+    """Run an inventory report for ad units.
+
+    Returns ad requests, impressions, and fill rate broken down by ad unit.
+
+    Args:
+        date_range_type: Date range for the report (TODAY, YESTERDAY, LAST_WEEK, etc.)
+        start_year: Start date year (for CUSTOM_DATE)
+        start_month: Start date month 1-12 (for CUSTOM_DATE)
+        start_day: Start date day 1-31 (for CUSTOM_DATE)
+        end_year: End date year (for CUSTOM_DATE)
+        end_month: End date month 1-12 (for CUSTOM_DATE)
+        end_day: End date day 1-31 (for CUSTOM_DATE)
+        ad_unit_id: Optional ad unit ID to filter by
+        include_date_breakdown: If True, includes daily breakdown (default: True)
+        timeout_seconds: Maximum time to wait for report (default: 120)
+
+    Returns report data with ad requests, impressions, and fill rate statistics.
+    """
+    init_client()
+    result = reporting.run_inventory_report(
+        date_range_type=date_range_type,
+        start_year=start_year,
+        start_month=start_month,
+        start_day=start_day,
+        end_year=end_year,
+        end_month=end_month,
+        end_day=end_day,
+        ad_unit_id=ad_unit_id,
+        include_date_breakdown=include_date_breakdown,
+        timeout_seconds=timeout_seconds
+    )
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def run_custom_report(
+    dimensions: str,
+    columns: str,
+    date_range_type: str = "LAST_WEEK",
+    start_year: Optional[int] = None,
+    start_month: Optional[int] = None,
+    start_day: Optional[int] = None,
+    end_year: Optional[int] = None,
+    end_month: Optional[int] = None,
+    end_day: Optional[int] = None,
+    filter_statement: Optional[str] = None,
+    timeout_seconds: int = 120
+) -> str:
+    """Run a custom report with specified dimensions and metrics.
+
+    Args:
+        dimensions: JSON array of dimension names, e.g. '["DATE", "ORDER_NAME", "LINE_ITEM_NAME"]'
+            Valid dimensions: DATE, WEEK, MONTH_AND_YEAR, ORDER_ID, ORDER_NAME,
+            LINE_ITEM_ID, LINE_ITEM_NAME, LINE_ITEM_TYPE, CREATIVE_ID, CREATIVE_NAME,
+            CREATIVE_SIZE, ADVERTISER_ID, ADVERTISER_NAME, AD_UNIT_ID, AD_UNIT_NAME
+        columns: JSON array of metric names, e.g. '["TOTAL_LINE_ITEM_LEVEL_IMPRESSIONS"]'
+            Valid metrics: TOTAL_LINE_ITEM_LEVEL_IMPRESSIONS, TOTAL_LINE_ITEM_LEVEL_CLICKS,
+            TOTAL_LINE_ITEM_LEVEL_CTR, TOTAL_LINE_ITEM_LEVEL_CPM_AND_CPC_REVENUE,
+            TOTAL_LINE_ITEM_LEVEL_ALL_REVENUE, TOTAL_INVENTORY_LEVEL_IMPRESSIONS,
+            TOTAL_AD_REQUESTS, TOTAL_RESPONSES_SERVED, TOTAL_FILL_RATE
+        date_range_type: Date range (TODAY, YESTERDAY, LAST_WEEK, LAST_MONTH,
+            LAST_3_MONTHS, REACH_LIFETIME, CUSTOM_DATE)
+        start_year: Start year for CUSTOM_DATE range
+        start_month: Start month (1-12) for CUSTOM_DATE range
+        start_day: Start day (1-31) for CUSTOM_DATE range
+        end_year: End year for CUSTOM_DATE range
+        end_month: End month (1-12) for CUSTOM_DATE range
+        end_day: End day (1-31) for CUSTOM_DATE range
+        filter_statement: Optional filter (e.g., "ORDER_ID = 12345")
+        timeout_seconds: Maximum seconds to wait for report completion
+
+    Returns report data with specified dimensions and metrics.
+    """
+    init_client()
+
+    # Parse JSON arrays
+    try:
+        parsed_dimensions = json.loads(dimensions)
+    except json.JSONDecodeError as e:
+        return json.dumps({"error": f"Invalid dimensions JSON: {e}"}, indent=2)
+
+    try:
+        parsed_columns = json.loads(columns)
+    except json.JSONDecodeError as e:
+        return json.dumps({"error": f"Invalid columns JSON: {e}"}, indent=2)
+
+    result = reporting.run_custom_report(
+        dimensions=parsed_dimensions,
+        columns=parsed_columns,
+        date_range_type=date_range_type,
+        start_year=start_year,
+        start_month=start_month,
+        start_day=start_day,
+        end_year=end_year,
+        end_month=end_month,
+        end_day=end_day,
+        filter_statement=filter_statement,
+        timeout_seconds=timeout_seconds
+    )
+    return json.dumps(result, indent=2)
+
+
+# =============================================================================
 # CAMPAIGN WORKFLOW TOOL
 # =============================================================================
 
@@ -578,7 +848,9 @@ def create_campaign(
     creatives_folder: str,
     click_through_url: str,
     target_ad_unit_id: str,
-    goal_impressions: int = 100000
+    goal_impressions: int = 100000,
+    line_item_type: str = "STANDARD",
+    creative_sizes: Optional[str] = None
 ) -> str:
     """Create a complete campaign: find/create advertiser, order, line item, and upload creatives.
 
@@ -593,6 +865,8 @@ def create_campaign(
         click_through_url: Destination URL for all creatives
         target_ad_unit_id: Ad unit ID to target (find via GAM UI or ad unit tools)
         goal_impressions: Impression goal (default: 100000)
+        line_item_type: Type of line item (STANDARD, SPONSORSHIP, NETWORK, BULK, PRICE_PRIORITY, HOUSE, etc.)
+        creative_sizes: JSON string of sizes, e.g. '[{"width": 300, "height": 250}, {"width": 728, "height": 90}]'
 
     This is a complete workflow that:
     1. Finds or creates the advertiser
@@ -611,6 +885,15 @@ def create_campaign(
         "creatives": None,
         "errors": []
     }
+
+    # Parse creative_sizes JSON if provided
+    parsed_sizes = None
+    if creative_sizes:
+        try:
+            parsed_sizes = json.loads(creative_sizes)
+        except json.JSONDecodeError as e:
+            result["errors"].append(f"Invalid creative_sizes JSON: {e}")
+            return json.dumps(result, indent=2)
 
     try:
         # Step 1: Find or create advertiser
@@ -640,7 +923,9 @@ def create_campaign(
             end_month=end_month,
             end_day=end_day,
             target_ad_unit_id=target_ad_unit_id,
-            goal_impressions=goal_impressions
+            goal_impressions=goal_impressions,
+            line_item_type=line_item_type,
+            creative_sizes=parsed_sizes
         )
         if "error" in li_result:
             result["errors"].append(f"Line Item: {li_result['error']}")

@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2025-12-23
+
+### Added
+
+- **Line Item Status Control** - New tools to manage line item lifecycle:
+  - `pause_line_item` - Pause a delivering line item to stop ad delivery
+  - `resume_line_item` - Resume a paused line item to restart delivery
+  - `archive_line_item` - Archive a line item (hides from UI, cannot be undone via API)
+  - `approve_line_item` - Approve a line item in approval workflow (NEEDS_APPROVAL status)
+- **Reporting Tools** - New tools to generate and retrieve performance reports:
+  - `run_delivery_report` - Generate delivery report with impressions, clicks, CTR, and revenue by order/line item
+  - `run_inventory_report` - Generate inventory report with ad requests, impressions, and fill rate by ad unit
+  - `run_custom_report` - Generate custom report with user-specified dimensions and metrics
+  - Supports multiple date ranges: TODAY, YESTERDAY, LAST_WEEK, LAST_MONTH, LAST_3_MONTHS, CUSTOM_DATE
+  - Filtering by order ID, line item ID, or ad unit ID
+  - Optional daily/weekly/monthly breakdown
+- **Pacing Calculation** - Enhanced `check_line_item_delivery_status` with pacing metrics:
+  - `pacing_percent` - Actual vs expected delivery based on time elapsed (100% = on track)
+  - `expected_delivery` - Impressions that should be delivered by now
+  - `days_elapsed` / `total_days` - Time progress through the campaign
+
+### Fixed
+
+- Fixed `check_line_item_delivery_status` using `.get()` on zeep objects instead of `safe_get()`
+
+## [0.1.5] - 2025-12-22
+
+### Added
+
+- Added `creative_sizes` parameter to `create_line_item` tool - allows specifying multiple creative sizes as JSON
+- Added `cost_per_unit_micro` and `currency_code` parameters to `create_line_item` tool
+- Added `line_item_type` and `creative_sizes` parameters to `create_campaign` workflow tool
+- Documented all supported line item types: SPONSORSHIP, STANDARD, NETWORK, BULK, PRICE_PRIORITY, HOUSE, CLICK_TRACKING, ADSENSE, AD_EXCHANGE, BUMPER, PREFERRED_DEAL
+
+### Changed
+
+- Enhanced `create_line_item` documentation with detailed descriptions of all line item types
+
 ## [0.1.4] - 2025-12-22
 
 ### Fixed
@@ -84,7 +122,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Environment-based configuration
   - Comprehensive logging
 
-[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.5...v0.1.6
+[0.1.5]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.1...v0.1.2

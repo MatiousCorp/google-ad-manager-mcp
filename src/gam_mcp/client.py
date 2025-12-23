@@ -76,6 +76,14 @@ class GAMClient:
         """
         return ad_manager.StatementBuilder(version=self._api_version)
 
+    def get_data_downloader(self):
+        """Get the data downloader for reports.
+
+        Returns:
+            The DataDownloader instance for downloading reports
+        """
+        return self.client.GetDataDownloader(version=self._api_version)
+
 
 # Global client instance
 _gam_client: Optional[GAMClient] = None

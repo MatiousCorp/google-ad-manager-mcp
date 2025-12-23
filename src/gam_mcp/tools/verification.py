@@ -1,6 +1,7 @@
 """Verification tools for Google Ad Manager."""
 
 import logging
+from datetime import datetime, date
 from typing import Optional
 from ..client import get_gam_client
 from ..utils import safe_get, extract_date
@@ -164,33 +165,74 @@ def check_line_item_delivery_status(line_item_id: int) -> dict:
         return {"error": f"Line item {line_item_id} not found"}
 
     li = response['results'][0]
-    stats = li.get('stats', {}) or {}
-    primary_goal = li.get('primaryGoal', {}) or {}
+    stats = safe_get(li, 'stats') or {}
+    primary_goal = safe_get(li, 'primaryGoal') or {}
 
     # Calculate progress
-    goal_units = primary_goal.get('units', 0) or 0
-    impressions = stats.get('impressionsDelivered', 0) or 0
+    goal_units = safe_get(primary_goal, 'units', 0) or 0
+    impressions = safe_get(stats, 'impressionsDelivered', 0) or 0
 
     progress_pct = 0
     if goal_units > 0:
         progress_pct = round((impressions / goal_units) * 100, 2)
 
+    # Extract dates for pacing calculation
+    start_date_str = extract_date(safe_get(li, 'startDateTime'))
+    end_date_str = extract_date(safe_get(li, 'endDateTime'))
+
+    # Calculate pacing (actual vs expected delivery based on time elapsed)
+    pacing_pct = None
+    expected_delivery = None
+    days_elapsed = None
+    total_days = None
+
+    if start_date_str and end_date_str and goal_units > 0:
+        try:
+            start_dt = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            end_dt = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+            today = date.today()
+
+            total_days = (end_dt - start_dt).days
+            if total_days > 0:
+                # Calculate days elapsed (capped at total_days)
+                days_elapsed = min((today - start_dt).days, total_days)
+                days_elapsed = max(days_elapsed, 0)  # Ensure non-negative
+
+                # Expected delivery based on time elapsed
+                time_fraction = days_elapsed / total_days
+                expected_delivery = int(goal_units * time_fraction)
+
+                # Pacing: actual / expected * 100
+                if expected_delivery > 0:
+                    pacing_pct = round((impressions / expected_delivery) * 100, 1)
+                elif days_elapsed == 0:
+                    # Campaign just started, no expected delivery yet
+                    pacing_pct = 100.0 if impressions == 0 else None
+        except (ValueError, TypeError):
+            pass  # Date parsing failed, skip pacing calculation
+
     return {
-        "line_item_id": li['id'],
-        "name": li['name'],
-        "status": li['status'],
-        "type": li.get('lineItemType'),
+        "line_item_id": safe_get(li, 'id'),
+        "name": safe_get(li, 'name'),
+        "status": safe_get(li, 'status'),
+        "type": safe_get(li, 'lineItemType'),
+        "start_date": start_date_str,
+        "end_date": end_date_str,
         "delivery": {
             "impressions_delivered": impressions,
-            "clicks_delivered": stats.get('clicksDelivered', 0) or 0,
-            "goal_type": primary_goal.get('goalType'),
-            "goal_unit_type": primary_goal.get('unitType'),
+            "clicks_delivered": safe_get(stats, 'clicksDelivered', 0) or 0,
+            "goal_type": safe_get(primary_goal, 'goalType'),
+            "goal_unit_type": safe_get(primary_goal, 'unitType'),
             "goal_units": goal_units,
-            "progress_percent": progress_pct
+            "progress_percent": progress_pct,
+            "expected_delivery": expected_delivery,
+            "pacing_percent": pacing_pct,
+            "days_elapsed": days_elapsed,
+            "total_days": total_days
         },
-        "needs_creatives": li.get('isMissingCreatives', False),
-        "is_set_to_deliver": li.get('isSetTopBoxEnabled', False),
-        "delivery_rate_type": li.get('deliveryRateType')
+        "needs_creatives": safe_get(li, 'isMissingCreatives', False),
+        "is_set_to_deliver": safe_get(li, 'isSetTopBoxEnabled', False),
+        "delivery_rate_type": safe_get(li, 'deliveryRateType')
     }
 
 

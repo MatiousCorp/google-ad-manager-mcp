@@ -346,6 +346,10 @@ npx @modelcontextprotocol/inspector http://localhost:8000/mcp
 | `duplicate_line_item` | Duplicate an existing line item |
 | `update_line_item_name` | Rename a line item |
 | `list_line_items_by_order` | List all line items for an order |
+| `pause_line_item` | Pause a delivering line item |
+| `resume_line_item` | Resume a paused line item |
+| `archive_line_item` | Archive a line item |
+| `approve_line_item` | Approve a line item (for approval workflows) |
 
 ### Creative Tools
 
@@ -375,6 +379,14 @@ npx @modelcontextprotocol/inspector http://localhost:8000/mcp
 | `verify_line_item_setup` | Verify line item configuration |
 | `check_line_item_delivery_status` | Check delivery progress |
 | `verify_order_setup` | Verify entire order setup |
+
+### Reporting Tools
+
+| Tool | Description |
+|------|-------------|
+| `run_delivery_report` | Generate delivery report (impressions, clicks, CTR, revenue) |
+| `run_inventory_report` | Generate inventory report (ad requests, fill rate) |
+| `run_custom_report` | Generate custom report with specified dimensions and metrics |
 
 ### Workflow Tools
 
@@ -451,14 +463,13 @@ The following features are planned for future releases:
 
 - [ ] **Ad Unit Management** - List, get, and create ad units with hierarchy support
 - [ ] **Placement Management** - Manage inventory placements and targeting
-- [ ] **Line Item Status Control** - Pause, resume, archive, and approve line items
 - [ ] **Forecast & Availability** - Check inventory availability and forecast impressions
 - [ ] **Creative Preview Links** - Generate preview URLs for creative-line item combinations
 
 ### Medium-term
 
 - [ ] **Advanced Targeting** - Geographic, device, daypart, and custom key-value targeting
-- [ ] **Reporting Tools** - Generate and retrieve performance reports
+- [x] **Reporting Tools** - Generate and retrieve performance reports
 - [ ] **Bulk Operations** - Batch updates for line items, creatives, and targeting
 - [ ] **HTML5/Video Creatives** - Support for rich media and video creative uploads
 
