@@ -18,25 +18,34 @@ def safe_get(obj: Any, key: str, default: Any = None) -> Any:
         return default
 
     # Try dict-style access first (for plain dicts)
-    if isinstance(obj, dict):
+    # Use type() check instead of isinstance() to avoid zeep objects
+    # that may pass isinstance(obj, dict) but lack .get() method
+    if type(obj) is dict:
         return obj.get(key, default)
 
-    # Try attribute access (for zeep objects)
+    # Try attribute access first (for zeep objects)
     try:
         value = getattr(obj, key, None)
-        if value is None:
-            return default
-        return value
+        if value is not None:
+            return value
     except (AttributeError, KeyError):
         pass
 
     # Try bracket access (zeep objects support this too)
     try:
         value = obj[key]
-        if value is None:
-            return default
-        return value
-    except (KeyError, TypeError, IndexError):
+        if value is not None:
+            return value
+    except (KeyError, TypeError, IndexError, AttributeError):
+        pass
+
+    # Try .get() method if available (for dict-like objects)
+    try:
+        if hasattr(obj, 'get'):
+            value = obj.get(key)
+            if value is not None:
+                return value
+    except (TypeError, AttributeError):
         pass
 
     return default

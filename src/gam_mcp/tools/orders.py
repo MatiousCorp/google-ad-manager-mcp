@@ -1,6 +1,7 @@
 """Order-related tools for Google Ad Manager."""
 
 import logging
+from datetime import datetime, date
 from typing import Optional
 from ..client import get_gam_client
 from ..utils import safe_get, extract_date
@@ -72,6 +73,44 @@ def list_delivering_orders() -> dict:
                 impressions = safe_get(stats, 'impressionsDelivered', 0) or 0
                 clicks = safe_get(stats, 'clicksDelivered', 0) or 0
 
+                # Extract primary goal
+                primary_goal = safe_get(li, 'primaryGoal')
+                goal_type = safe_get(primary_goal, 'goalType')
+                goal_unit_type = safe_get(primary_goal, 'unitType')
+                goal_units = safe_get(primary_goal, 'units', 0) or 0
+
+                # Calculate progress
+                progress_pct = 0
+                if goal_units > 0:
+                    progress_pct = round((impressions / goal_units) * 100, 2)
+
+                # Calculate pacing
+                pacing_pct = None
+                expected_delivery = None
+                days_elapsed = None
+                total_days = None
+
+                if start_date and end_date and goal_units > 0:
+                    try:
+                        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+                        end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+                        today = date.today()
+
+                        total_days = (end_dt - start_dt).days
+                        if total_days > 0:
+                            days_elapsed = min((today - start_dt).days, total_days)
+                            days_elapsed = max(days_elapsed, 0)
+
+                            time_fraction = days_elapsed / total_days
+                            expected_delivery = int(goal_units * time_fraction)
+
+                            if expected_delivery > 0:
+                                pacing_pct = round((impressions / expected_delivery) * 100, 1)
+                            elif days_elapsed == 0:
+                                pacing_pct = 100.0 if impressions == 0 else None
+                    except (ValueError, TypeError):
+                        pass
+
                 line_item_data = {
                     "id": safe_get(li, 'id'),
                     "name": safe_get(li, 'name'),
@@ -80,7 +119,15 @@ def list_delivering_orders() -> dict:
                     "start_date": start_date,
                     "end_date": end_date,
                     "impressions_delivered": impressions,
-                    "clicks_delivered": clicks
+                    "clicks_delivered": clicks,
+                    "goal_type": goal_type,
+                    "goal_unit_type": goal_unit_type,
+                    "goal_units": goal_units,
+                    "progress_percent": progress_pct,
+                    "expected_delivery": expected_delivery,
+                    "pacing_percent": pacing_pct,
+                    "days_elapsed": days_elapsed,
+                    "total_days": total_days
                 }
                 order_data["line_items"].append(line_item_data)
 
