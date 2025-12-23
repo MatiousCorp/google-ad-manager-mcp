@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2025-12-23
+
+### Added
+
+- **Delivery metrics in `list_delivering_orders`** - Now includes full delivery tracking for each line item:
+  - `goal_type` - Goal type (LIFETIME, DAILY, etc.)
+  - `goal_unit_type` - Unit type (IMPRESSIONS, CLICKS, etc.)
+  - `goal_units` - Target goal units
+  - `progress_percent` - Actual delivery vs goal percentage
+  - `expected_delivery` - Expected impressions based on time elapsed
+  - `pacing_percent` - Actual vs expected delivery (100% = on track)
+  - `days_elapsed` / `total_days` - Campaign time progress
+
+### Fixed
+
+- Fixed `safe_get` utility to properly handle zeep objects that incorrectly pass `isinstance(obj, dict)` but lack `.get()` method
+- Changed from `isinstance(obj, dict)` to `type(obj) is dict` check to avoid zeep object issues
+
 ## [0.1.6] - 2025-12-23
 
 ### Added
@@ -122,7 +140,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Environment-based configuration
   - Comprehensive logging
 
-[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.3...v0.1.4
