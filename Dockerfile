@@ -1,35 +1,34 @@
-FROM python:3.11-slim
+FROM debian:bookworm-slim
 
-# Create non-root user for security
-RUN groupadd --gid 1000 appgroup && \
-    useradd --uid 1000 --gid appgroup --shell /bin/bash --create-home appuser
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install Node.js, npm, mcp-proxy, and Python via uv
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl git \
+    && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g mcp-proxy@5.12.0 \
+    && node --version \
+    && curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR="/usr/local/bin" sh \
+    && uv python install 3.10 --default --preview \
+    && ln -s $(uv python find) /usr/local/bin/python \
+    && python --version \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /app
 
-# Copy project files needed for installation
-COPY pyproject.toml README.md ./
-COPY src/ src/
+# Copy project files
+COPY . .
 
-# Install dependencies as root (required for pip install)
-RUN pip install --no-cache-dir .
+# Install dependencies
+RUN uv sync
 
-# Set ownership of app directory to non-root user
-RUN chown -R appuser:appgroup /app
+# Environment variables (set at runtime)
+# GAM_CREDENTIALS_PATH: Path to service account JSON
+# GAM_NETWORK_CODE: Your Google Ad Manager network code
 
-# Environment variables (required - must be set at runtime)
-# GAM_CREDENTIALS_PATH: Path to service account JSON (default: /app/credentials.json if mounting)
-# GAM_NETWORK_CODE: Your Google Ad Manager network code (REQUIRED)
-# GAM_MCP_TRANSPORT: Transport mode - "stdio" or "http" (default: http)
-# GAM_MCP_AUTH_TOKEN: Authentication token for HTTP mode (generate with: python -c "import secrets; print(secrets.token_hex(32))")
-ENV GAM_CREDENTIALS_PATH=/app/credentials.json
-ENV GAM_MCP_TRANSPORT=stdio
-ENV GAM_MCP_HOST=0.0.0.0
-ENV GAM_MCP_PORT=8000
+EXPOSE 8080
 
-# Switch to non-root user
-USER appuser
-
-EXPOSE 8000
-
-# Run the server
-CMD ["python", "-m", "gam_mcp.server"]
+# Run via mcp-proxy with shell mode to properly handle uv
+CMD ["mcp-proxy", "--shell", "uv run python -m gam_mcp.server"]
