@@ -526,6 +526,117 @@ def list_creatives_by_advertiser(advertiser_id: int, limit: int = 100) -> str:
     return json.dumps(result, indent=2)
 
 
+@mcp.tool()
+def update_creative(
+    creative_id: int,
+    destination_url: Optional[str] = None,
+    name: Optional[str] = None
+) -> str:
+    """Update an existing creative's properties.
+
+    Args:
+        creative_id: The creative ID to update
+        destination_url: New destination/click-through URL for the creative
+        name: New name for the creative
+
+    At least one of destination_url or name must be provided.
+    Returns the updated creative details.
+    """
+    init_client()
+    result = creatives.update_creative(
+        creative_id=creative_id,
+        destination_url=destination_url,
+        name=name
+    )
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def list_creatives_by_line_item(line_item_id: int, limit: int = 100) -> str:
+    """List creatives associated with a line item.
+
+    Args:
+        line_item_id: The line item ID
+        limit: Maximum number of creatives to return (default: 100)
+
+    Returns list of creatives with their association status.
+    """
+    init_client()
+    result = creatives.list_creatives_by_line_item(
+        line_item_id=line_item_id,
+        limit=limit
+    )
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def get_creative_preview_url(
+    line_item_id: int,
+    creative_id: int,
+    site_url: str
+) -> str:
+    """Get a preview URL for a creative associated with a line item.
+
+    This generates a preview URL that shows how the creative will appear
+    on the specified site URL. The preview URL loads the site with the
+    creative displayed in its ad slots.
+
+    Args:
+        line_item_id: The line item ID
+        creative_id: The creative ID
+        site_url: The URL of the site where you want to preview the creative
+            (e.g., "https://abc.com")
+
+    Returns the preview URL that can be opened in a browser.
+    """
+    init_client()
+    result = creatives.get_creative_preview_url(
+        line_item_id=line_item_id,
+        creative_id=creative_id,
+        site_url=site_url
+    )
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def create_third_party_creative(
+    advertiser_id: int,
+    name: str,
+    width: int,
+    height: int,
+    snippet: str,
+    expanded_snippet: Optional[str] = None,
+    is_safe_frame_compatible: bool = True
+) -> str:
+    """Create a third-party creative (HTML/JavaScript ad tag).
+
+    Use this for DCM/Campaign Manager tags, custom HTML ads, or any third-party
+    ad server tags that need to be served through Google Ad Manager.
+
+    Args:
+        advertiser_id: ID of the advertiser
+        name: Name for the creative
+        width: Creative width in pixels
+        height: Creative height in pixels
+        snippet: The HTML/JavaScript code snippet (the ad tag)
+        expanded_snippet: Optional expanded snippet for expandable creatives
+        is_safe_frame_compatible: Whether the creative works in SafeFrame (default: True)
+
+    Returns the created creative details.
+    """
+    init_client()
+    result = creatives.create_third_party_creative(
+        advertiser_id=advertiser_id,
+        name=name,
+        width=width,
+        height=height,
+        snippet=snippet,
+        expanded_snippet=expanded_snippet,
+        is_safe_frame_compatible=is_safe_frame_compatible
+    )
+    return json.dumps(result, indent=2)
+
+
 # =============================================================================
 # ADVERTISER TOOLS
 # =============================================================================

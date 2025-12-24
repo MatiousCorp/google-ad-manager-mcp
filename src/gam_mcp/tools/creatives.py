@@ -427,3 +427,243 @@ def list_creatives_by_advertiser(advertiser_id: int, limit: int = 100) -> dict:
         "creatives": creatives,
         "total": len(creatives)
     }
+
+
+def update_creative(
+    creative_id: int,
+    destination_url: Optional[str] = None,
+    name: Optional[str] = None
+) -> dict:
+    """Update an existing creative's properties.
+
+    Args:
+        creative_id: The creative ID to update
+        destination_url: New destination URL (click-through URL)
+        name: New name for the creative
+
+    Returns:
+        dict with updated creative details
+    """
+    client = get_gam_client()
+    creative_service = client.get_service('CreativeService')
+
+    # First, get the existing creative
+    statement = client.create_statement()
+    statement = statement.Where("id = :id").WithBindVariable('id', creative_id)
+
+    response = creative_service.getCreativesByStatement(statement.ToStatement())
+
+    if 'results' not in response or len(response['results']) == 0:
+        return {"error": f"Creative {creative_id} not found"}
+
+    creative = response['results'][0]
+
+    # Update the fields
+    if destination_url is not None:
+        creative['destinationUrl'] = destination_url
+
+    if name is not None:
+        creative['name'] = name
+
+    # Update the creative
+    updated_creatives = creative_service.updateCreatives([creative])
+
+    if not updated_creatives:
+        return {"error": "Failed to update creative"}
+
+    updated = updated_creatives[0]
+    size = safe_get(updated, 'size')
+
+    return {
+        "id": safe_get(updated, 'id'),
+        "name": safe_get(updated, 'name'),
+        "advertiser_id": safe_get(updated, 'advertiserId'),
+        "size": f"{safe_get(size, 'width')}x{safe_get(size, 'height')}" if size else None,
+        "type": safe_get(updated, 'Creative.Type'),
+        "destination_url": safe_get(updated, 'destinationUrl'),
+        "message": f"Creative {creative_id} updated successfully"
+    }
+
+
+def create_third_party_creative(
+    advertiser_id: int,
+    name: str,
+    width: int,
+    height: int,
+    snippet: str,
+    expanded_snippet: Optional[str] = None,
+    is_safe_frame_compatible: bool = True
+) -> dict:
+    """Create a third-party creative (HTML/JavaScript ad tag).
+
+    Use this for DCM/Campaign Manager tags, custom HTML ads, or any third-party
+    ad server tags that need to be served through Google Ad Manager.
+
+    Args:
+        advertiser_id: ID of the advertiser
+        name: Name for the creative
+        width: Creative width in pixels
+        height: Creative height in pixels
+        snippet: The HTML/JavaScript code snippet (the ad tag)
+        expanded_snippet: Optional expanded snippet for expandable creatives
+        is_safe_frame_compatible: Whether the creative works in SafeFrame (default: True)
+
+    Returns:
+        dict with created creative details
+    """
+    client = get_gam_client()
+    creative_service = client.get_service('CreativeService')
+
+    creative = {
+        'xsi_type': 'ThirdPartyCreative',
+        'name': name,
+        'advertiserId': advertiser_id,
+        'size': {
+            'width': width,
+            'height': height,
+            'isAspectRatio': False
+        },
+        'snippet': snippet,
+        'isSafeFrameCompatible': is_safe_frame_compatible
+    }
+
+    if expanded_snippet:
+        creative['expandedSnippet'] = expanded_snippet
+
+    created_creatives = creative_service.createCreatives([creative])
+
+    if not created_creatives:
+        return {"error": "Failed to create third-party creative"}
+
+    created = created_creatives[0]
+    size = safe_get(created, 'size')
+
+    return {
+        "id": safe_get(created, 'id'),
+        "name": safe_get(created, 'name'),
+        "advertiser_id": advertiser_id,
+        "size": f"{safe_get(size, 'width')}x{safe_get(size, 'height')}" if size else None,
+        "type": "ThirdPartyCreative",
+        "is_safe_frame_compatible": is_safe_frame_compatible,
+        "message": f"Third-party creative '{name}' created successfully"
+    }
+
+
+def get_creative_preview_url(
+    line_item_id: int,
+    creative_id: int,
+    site_url: str
+) -> dict:
+    """Get a preview URL for a creative associated with a line item.
+
+    This generates a preview URL that shows how the creative will appear
+    on the specified site URL.
+
+    Args:
+        line_item_id: The line item ID
+        creative_id: The creative ID
+        site_url: The URL of the site where you want to preview the creative
+
+    Returns:
+        dict with preview URL
+    """
+    client = get_gam_client()
+    lica_service = client.get_service('LineItemCreativeAssociationService')
+
+    try:
+        # Use positional arguments as the SOAP API expects them in order:
+        # lineItemId, creativeId, siteUrl
+        preview_url = lica_service.getPreviewUrl(
+            line_item_id,
+            creative_id,
+            site_url
+        )
+
+        return {
+            "line_item_id": line_item_id,
+            "creative_id": creative_id,
+            "site_url": site_url,
+            "preview_url": preview_url,
+            "message": "Preview URL generated successfully"
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "line_item_id": line_item_id,
+            "creative_id": creative_id,
+            "site_url": site_url
+        }
+
+
+def list_creatives_by_line_item(line_item_id: int, limit: int = 100) -> dict:
+    """List creatives associated with a line item.
+
+    Args:
+        line_item_id: The line item ID
+        limit: Maximum number of creatives to return
+
+    Returns:
+        dict with creatives list and association details
+    """
+    client = get_gam_client()
+    lica_service = client.get_service('LineItemCreativeAssociationService')
+    creative_service = client.get_service('CreativeService')
+
+    # Get line item creative associations
+    statement = client.create_statement()
+    statement = statement.Where(
+        "lineItemId = :lineItemId"
+    ).WithBindVariable('lineItemId', line_item_id).Limit(limit)
+
+    response = lica_service.getLineItemCreativeAssociationsByStatement(
+        statement.ToStatement()
+    )
+
+    if 'results' not in response or len(response['results']) == 0:
+        return {
+            "line_item_id": line_item_id,
+            "creatives": [],
+            "total": 0,
+            "message": "No creatives associated with this line item"
+        }
+
+    # Get creative IDs from associations
+    creative_ids = [safe_get(lica, 'creativeId') for lica in response['results']]
+    associations_map = {
+        safe_get(lica, 'creativeId'): {
+            "status": safe_get(lica, 'status'),
+            "sizes": safe_get(lica, 'sizes')
+        }
+        for lica in response['results']
+    }
+
+    # Fetch creative details
+    creative_ids_str = ', '.join(str(cid) for cid in creative_ids if cid)
+    creative_statement = client.create_statement()
+    creative_statement = creative_statement.Where(f"id IN ({creative_ids_str})")
+
+    creative_response = creative_service.getCreativesByStatement(
+        creative_statement.ToStatement()
+    )
+
+    creatives = []
+    if 'results' in creative_response:
+        for c in creative_response['results']:
+            cid = safe_get(c, 'id')
+            size = safe_get(c, 'size')
+            assoc = associations_map.get(cid, {})
+
+            creatives.append({
+                "id": cid,
+                "name": safe_get(c, 'name'),
+                "size": f"{safe_get(size, 'width')}x{safe_get(size, 'height')}" if size else None,
+                "type": safe_get(c, 'Creative.Type'),
+                "destination_url": safe_get(c, 'destinationUrl'),
+                "association_status": assoc.get("status")
+            })
+
+    return {
+        "line_item_id": line_item_id,
+        "creatives": creatives,
+        "total": len(creatives)
+    }

@@ -361,6 +361,10 @@ npx @modelcontextprotocol/inspector http://localhost:8000/mcp
 | `bulk_upload_creatives` | Upload all creatives from a folder |
 | `get_creative` | Get creative details |
 | `list_creatives_by_advertiser` | List creatives for an advertiser |
+| `update_creative` | Update creative destination URL or name |
+| `list_creatives_by_line_item` | List creatives associated with a line item |
+| `create_third_party_creative` | Create HTML/JavaScript ad tag (DCM, custom HTML) |
+| `get_creative_preview_url` | Generate preview URL to see creative on your site |
 
 ### Advertiser Tools
 
@@ -464,7 +468,7 @@ The following features are planned for future releases:
 - [ ] **Ad Unit Management** - List, get, and create ad units with hierarchy support
 - [ ] **Placement Management** - Manage inventory placements and targeting
 - [ ] **Forecast & Availability** - Check inventory availability and forecast impressions
-- [ ] **Creative Preview Links** - Generate preview URLs for creative-line item combinations
+- [x] **Creative Preview Links** - Generate preview URLs for creative-line item combinations
 
 ### Medium-term
 

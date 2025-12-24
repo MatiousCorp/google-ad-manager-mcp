@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10] - 2024-12-24
+
+### Added
+
+- **Creative Preview URL** - Generate preview URLs to see how creatives will appear on your site:
+  - `get_creative_preview_url` - Get a preview URL for a creative associated with a line item
+  - Takes `line_item_id`, `creative_id`, and `site_url` as parameters
+  - Returns a URL that loads the site with the creative displayed in ad slots
+  - Uses the official GAM SOAP API `LineItemCreativeAssociationService.getPreviewUrl` method
+
+## [0.1.9] - 2024-12-24
+
+### Added
+
+- **Third-Party Creative Support** - Create HTML/JavaScript ad creatives programmatically:
+  - `create_third_party_creative` - Create DCM/Campaign Manager tags, custom HTML ads, or any third-party ad server tags
+  - Supports SafeFrame compatibility setting
+  - Supports expanded snippets for expandable creatives
+  - Use with existing `associate_creative_with_line_item` to link to line items
+
+## [0.1.8] - 2024-12-24
+
+### Added
+
+- **`update_creative`** - Update an existing creative's properties:
+  - `destination_url` - Change the click-through URL
+  - `name` - Rename the creative
+- **`list_creatives_by_line_item`** - List all creatives associated with a specific line item:
+  - Returns creative details including name, size, type, destination URL
+  - Includes association status (ACTIVE, INACTIVE, etc.)
+
 ## [0.1.7] - 2025-12-23
 
 ### Added
@@ -140,7 +171,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Environment-based configuration
   - Comprehensive logging
 
-[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.10...HEAD
+[0.1.10]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.9...v0.1.10
+[0.1.9]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.8...v0.1.9
+[0.1.8]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.4...v0.1.5

@@ -9,7 +9,13 @@
       "Bash(docker run:*)",
       "Bash(pip install:*)",
       "Bash(pytest:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(uv run pytest:*)",
+      "Bash(GAM_CREDENTIALS_PATH=\"/Users/youssef/Documents/quid.ma/ad-manager-api-478019-0997a25950aa.json\" GAM_NETWORK_CODE=\"31083078\" uv run python:*)",
+      "Bash(docker build:*)",
+      "Bash(docker logs:*)",
+      "Bash(python3 -m build:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
