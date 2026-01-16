@@ -57,6 +57,19 @@ def get_line_item(line_item_id: int) -> dict:
     impressions = safe_get(stats, 'impressionsDelivered', 0) or 0
     clicks = safe_get(stats, 'clicksDelivered', 0) or 0
 
+    # Extract targeted ad unit IDs
+    targeted_ad_unit_ids = []
+    targeting = safe_get(li, 'targeting')
+    if targeting:
+        inventory_targeting = safe_get(targeting, 'inventoryTargeting')
+        if inventory_targeting:
+            targeted_ad_units = safe_get(inventory_targeting, 'targetedAdUnits')
+            if targeted_ad_units:
+                for ad_unit in targeted_ad_units:
+                    ad_unit_id = safe_get(ad_unit, 'adUnitId')
+                    if ad_unit_id:
+                        targeted_ad_unit_ids.append(ad_unit_id)
+
     return {
         "id": safe_get(li, 'id'),
         "name": safe_get(li, 'name'),
@@ -70,7 +83,8 @@ def get_line_item(line_item_id: int) -> dict:
         "impressions_delivered": impressions,
         "clicks_delivered": clicks,
         "delivery_rate_type": safe_get(li, 'deliveryRateType'),
-        "environment_type": safe_get(li, 'environmentType')
+        "environment_type": safe_get(li, 'environmentType'),
+        "targeted_ad_unit_ids": targeted_ad_unit_ids
     }
 
 
@@ -257,12 +271,35 @@ def duplicate_line_item(
     return result
 
 
-def update_line_item_name(line_item_id: int, new_name: str) -> dict:
-    """Update a line item's name.
+def update_line_item(
+    line_item_id: int,
+    name: Optional[str] = None,
+    line_item_type: Optional[str] = None,
+    delivery_rate_type: Optional[str] = None,
+    priority: Optional[int] = None,
+    cost_per_unit_micro: Optional[int] = None,
+    currency_code: Optional[str] = None,
+    goal_impressions: Optional[int] = None,
+    end_year: Optional[int] = None,
+    end_month: Optional[int] = None,
+    end_day: Optional[int] = None
+) -> dict:
+    """Update an existing line item's properties.
 
     Args:
-        line_item_id: The line item ID
-        new_name: New name for the line item
+        line_item_id: The line item ID to update
+        name: New name for the line item
+        line_item_type: Type of line item (STANDARD, SPONSORSHIP, NETWORK, BULK,
+                       PRICE_PRIORITY, HOUSE, etc.)
+        delivery_rate_type: How the line item delivers (EVENLY, FRONTLOADED,
+                           AS_FAST_AS_POSSIBLE)
+        priority: Priority value (1-16, depends on line item type)
+        cost_per_unit_micro: Cost per unit in micro amounts (e.g., 1000000 = 1 currency unit)
+        currency_code: Currency code (e.g., MAD, USD, EUR)
+        goal_impressions: Impression goal (updates primaryGoal.units)
+        end_year: End date year
+        end_month: End date month (1-12)
+        end_day: End date day (1-31)
 
     Returns:
         dict with updated line item details
@@ -270,6 +307,7 @@ def update_line_item_name(line_item_id: int, new_name: str) -> dict:
     client = get_gam_client()
     line_item_service = client.get_service('LineItemService')
 
+    # Fetch the existing line item
     statement = client.create_statement()
     statement = statement.Where("id = :id").WithBindVariable('id', line_item_id)
     response = line_item_service.getLineItemsByStatement(statement.ToStatement())
@@ -278,19 +316,100 @@ def update_line_item_name(line_item_id: int, new_name: str) -> dict:
         return {"error": f"Line item {line_item_id} not found"}
 
     line_item = response['results'][0]
-    old_name = safe_get(line_item, 'name')
-    line_item['name'] = new_name
+    changes = []
 
+    # Update name
+    if name is not None:
+        old_name = safe_get(line_item, 'name')
+        line_item['name'] = name
+        changes.append(f"name: '{old_name}' -> '{name}'")
+
+    # Update line item type
+    if line_item_type is not None:
+        old_type = safe_get(line_item, 'lineItemType')
+        line_item['lineItemType'] = line_item_type
+        changes.append(f"lineItemType: '{old_type}' -> '{line_item_type}'")
+
+    # Update delivery rate type
+    if delivery_rate_type is not None:
+        old_delivery = safe_get(line_item, 'deliveryRateType')
+        line_item['deliveryRateType'] = delivery_rate_type
+        changes.append(f"deliveryRateType: '{old_delivery}' -> '{delivery_rate_type}'")
+
+    # Update priority
+    if priority is not None:
+        old_priority = safe_get(line_item, 'priority')
+        line_item['priority'] = priority
+        changes.append(f"priority: {old_priority} -> {priority}")
+
+    # Update cost per unit
+    if cost_per_unit_micro is not None or currency_code is not None:
+        if 'costPerUnit' not in line_item:
+            line_item['costPerUnit'] = {}
+
+        if cost_per_unit_micro is not None:
+            old_cost = safe_get(line_item.get('costPerUnit', {}), 'microAmount', 0)
+            line_item['costPerUnit']['microAmount'] = cost_per_unit_micro
+            changes.append(f"costPerUnit.microAmount: {old_cost} -> {cost_per_unit_micro}")
+
+        if currency_code is not None:
+            old_currency = safe_get(line_item.get('costPerUnit', {}), 'currencyCode')
+            line_item['costPerUnit']['currencyCode'] = currency_code
+            changes.append(f"costPerUnit.currencyCode: '{old_currency}' -> '{currency_code}'")
+
+    # Update goal impressions
+    if goal_impressions is not None:
+        if 'primaryGoal' not in line_item:
+            line_item['primaryGoal'] = {
+                'goalType': 'LIFETIME',
+                'unitType': 'IMPRESSIONS'
+            }
+        old_goal = safe_get(line_item.get('primaryGoal', {}), 'units', 0)
+        line_item['primaryGoal']['units'] = goal_impressions
+        changes.append(f"primaryGoal.units: {old_goal} -> {goal_impressions}")
+
+    # Update end date
+    if end_year is not None and end_month is not None and end_day is not None:
+        old_end = extract_date(safe_get(line_item, 'endDateTime'))
+        line_item['endDateTime'] = {
+            'date': {'year': end_year, 'month': end_month, 'day': end_day},
+            'hour': 23,
+            'minute': 59,
+            'second': 59,
+            'timeZoneId': 'Africa/Casablanca'
+        }
+        new_end = f"{end_year}-{end_month:02d}-{end_day:02d}"
+        changes.append(f"endDateTime: '{old_end}' -> '{new_end}'")
+
+    if not changes:
+        return {"error": "No changes specified. Provide at least one field to update."}
+
+    # Perform the update
     updated = line_item_service.updateLineItems([line_item])
 
     if not updated:
         return {"error": "Failed to update line item"}
 
+    updated_li = updated[0]
+
+    # Extract updated values for response
+    end_date = extract_date(safe_get(updated_li, 'endDateTime'))
+
     return {
-        "id": safe_get(updated[0], 'id'),
-        "old_name": old_name,
-        "new_name": safe_get(updated[0], 'name'),
-        "message": f"Line item renamed from '{old_name}' to '{new_name}'"
+        "id": safe_get(updated_li, 'id'),
+        "name": safe_get(updated_li, 'name'),
+        "order_id": safe_get(updated_li, 'orderId'),
+        "status": safe_get(updated_li, 'status'),
+        "type": safe_get(updated_li, 'lineItemType'),
+        "delivery_rate_type": safe_get(updated_li, 'deliveryRateType'),
+        "priority": safe_get(updated_li, 'priority'),
+        "cost_type": safe_get(updated_li, 'costType'),
+        "cost_per_unit_micro": safe_get(updated_li.get('costPerUnit', {}), 'microAmount'),
+        "currency_code": safe_get(updated_li.get('costPerUnit', {}), 'currencyCode'),
+        "goal_impressions": safe_get(updated_li.get('primaryGoal', {}), 'units'),
+        "end_date": end_date,
+        "changes": changes,
+        "message": f"Line item {line_item_id} updated successfully"
     }
 
 

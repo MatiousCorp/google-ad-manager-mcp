@@ -1,6 +1,6 @@
 [project]
 name = "google-ad-manager-mcp"
-version = "0.1.10"
+version = "0.1.11"
 description = "Google Ad Manager MCP Server - An MCP server for managing ad campaigns, line items, creatives, and more"
 readme = "README.md"
 license = {text = "MIT"}

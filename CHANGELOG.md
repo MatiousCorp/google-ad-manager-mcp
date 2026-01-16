@@ -5,7 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.11] - 2025-01-16
+
+### Added
+
+- **`get_line_item`** now returns `targeted_ad_unit_ids` - List of ad unit IDs targeted by the line item
+- **`update_line_item`** - Comprehensive line item update tool with support for:
+  - `name` - Update line item name
+  - `line_item_type` - Change type (STANDARD, SPONSORSHIP, NETWORK, BULK, PRICE_PRIORITY, HOUSE)
+  - `delivery_rate_type` - Change delivery pacing (EVENLY, FRONTLOADED, AS_FAST_AS_POSSIBLE)
+  - `priority` - Set priority value (1-16)
+  - `cost_per_unit_micro` - Update CPM/CPC cost
+  - `currency_code` - Change currency
+  - `goal_impressions` - Update impression goal
+  - `end_year`, `end_month`, `end_day` - Update end date
+  - Returns a list of all changes made
+
+### Removed
+
+- **`update_line_item_name`** - Superseded by the more comprehensive `update_line_item` tool
 
 ## [0.1.10] - 2024-12-24
 
@@ -171,7 +189,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Environment-based configuration
   - Comprehensive logging
 
-[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.10...HEAD
+[Unreleased]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.11...HEAD
+[0.1.11]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/MatiousCorp/google-ad-manager-mcp/compare/v0.1.7...v0.1.8

@@ -344,7 +344,7 @@ npx @modelcontextprotocol/inspector http://localhost:8000/mcp
 | `get_line_item` | Get line item details |
 | `create_line_item` | Create a new line item |
 | `duplicate_line_item` | Duplicate an existing line item |
-| `update_line_item_name` | Rename a line item |
+| `update_line_item` | Update line item properties (name, type, delivery rate, priority, cost, goal, end date) |
 | `list_line_items_by_order` | List all line items for an order |
 | `pause_line_item` | Pause a delivering line item |
 | `resume_line_item` | Resume a paused line item |

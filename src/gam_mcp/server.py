@@ -265,19 +265,63 @@ def duplicate_line_item(
 
 
 @mcp.tool()
-def update_line_item_name(line_item_id: int, new_name: str) -> str:
-    """Update a line item's name.
+def update_line_item(
+    line_item_id: int,
+    name: Optional[str] = None,
+    line_item_type: Optional[str] = None,
+    delivery_rate_type: Optional[str] = None,
+    priority: Optional[int] = None,
+    cost_per_unit_micro: Optional[int] = None,
+    currency_code: Optional[str] = None,
+    goal_impressions: Optional[int] = None,
+    end_year: Optional[int] = None,
+    end_month: Optional[int] = None,
+    end_day: Optional[int] = None
+) -> str:
+    """Update an existing line item's properties.
 
     Args:
-        line_item_id: The line item ID
-        new_name: New name for the line item
+        line_item_id: The line item ID to update
+        name: New name for the line item
+        line_item_type: Type of line item. Valid types:
+            - SPONSORSHIP: Guaranteed, time-based (100% share of voice)
+            - STANDARD: Guaranteed, goal-based (specific number of impressions)
+            - NETWORK: Non-guaranteed, run-of-network
+            - BULK: Non-guaranteed, volume-based
+            - PRICE_PRIORITY: Non-guaranteed, competes on price
+            - HOUSE: Internal/house ads (lowest priority)
+        delivery_rate_type: How the line item delivers:
+            - EVENLY: Spread delivery evenly over the flight
+            - FRONTLOADED: Deliver more at the beginning
+            - AS_FAST_AS_POSSIBLE: Deliver as quickly as possible
+        priority: Priority value (1-16, depends on line item type).
+            Lower numbers = higher priority.
+            SPONSORSHIP: 4, STANDARD: 6-10, NETWORK: 12, BULK: 12, PRICE_PRIORITY: 12, HOUSE: 16
+        cost_per_unit_micro: Cost per unit in micro amounts (e.g., 1000000 = 1 currency unit)
+        currency_code: Currency code (e.g., MAD, USD, EUR)
+        goal_impressions: Impression goal (updates primaryGoal.units)
+        end_year: End date year
+        end_month: End date month (1-12)
+        end_day: End date day (1-31)
 
-    Returns the updated line item details.
+    Note: At least one field must be provided to update.
+    End date requires all three components (year, month, day).
+
+    Returns the updated line item details with a list of changes made.
     """
     init_client()
-    result = line_items.update_line_item_name(
+    result = line_items.update_line_item(
         line_item_id=line_item_id,
-        new_name=new_name
+        name=name,
+        line_item_type=line_item_type,
+        delivery_rate_type=delivery_rate_type,
+        priority=priority,
+        cost_per_unit_micro=cost_per_unit_micro,
+        currency_code=currency_code,
+        goal_impressions=goal_impressions,
+        end_year=end_year,
+        end_month=end_month,
+        end_day=end_day
     )
     return json.dumps(result, indent=2)
 
