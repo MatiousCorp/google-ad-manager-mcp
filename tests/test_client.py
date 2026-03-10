@@ -79,7 +79,7 @@ class TestGAMClient:
             credentials_path="/path/to/creds.json",
             network_code="12345678",
         )
-        assert client.api_version == "v202411"
+        assert client.api_version == "v202502"
 
     @patch("gam_mcp.client.oauth2.GoogleServiceAccountClient")
     @patch("gam_mcp.client.ad_manager.AdManagerClient")
@@ -96,7 +96,7 @@ class TestGAMClient:
         client.get_service("OrderService")
 
         mock_client_instance.GetService.assert_called_once_with(
-            "OrderService", version="v202411"
+            "OrderService", version="v202502"
         )
 
     @patch("gam_mcp.client.ad_manager.StatementBuilder")
@@ -109,7 +109,7 @@ class TestGAMClient:
 
         client.create_statement()
 
-        mock_statement_builder.assert_called_once_with(version="v202411")
+        mock_statement_builder.assert_called_once_with(version="v202502")
 
 
 class TestGlobalClient:

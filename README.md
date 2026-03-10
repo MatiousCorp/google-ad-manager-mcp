@@ -498,7 +498,7 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## API Version
 
-Uses Google Ad Manager SOAP API version `v202411`.
+Uses Google Ad Manager SOAP API version `v202502`.
 
 ## License
 
