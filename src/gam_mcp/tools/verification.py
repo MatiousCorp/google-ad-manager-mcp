@@ -9,16 +9,17 @@ from ..utils import safe_get, extract_date
 logger = logging.getLogger(__name__)
 
 
-def verify_line_item_setup(line_item_id: int) -> dict:
+def verify_line_item_setup(line_item_id: int, network_code: Optional[str] = None) -> dict:
     """Verify line item setup including creative placeholders and associations.
 
     Args:
         line_item_id: The line item ID to verify
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with verification results
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
 
     result = {
         "line_item_id": line_item_id,
@@ -145,16 +146,17 @@ def verify_line_item_setup(line_item_id: int) -> dict:
     return result
 
 
-def check_line_item_delivery_status(line_item_id: int) -> dict:
+def check_line_item_delivery_status(line_item_id: int, network_code: Optional[str] = None) -> dict:
     """Check detailed delivery status for a line item.
 
     Args:
         line_item_id: The line item ID to check
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with delivery status details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     line_item_service = client.get_service('LineItemService')
 
     statement = client.create_statement()
@@ -236,16 +238,17 @@ def check_line_item_delivery_status(line_item_id: int) -> dict:
     }
 
 
-def verify_order_setup(order_id: int) -> dict:
+def verify_order_setup(order_id: int, network_code: Optional[str] = None) -> dict:
     """Verify complete order setup including all line items.
 
     Args:
         order_id: The order ID to verify
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with complete order verification
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
 
     # Get order using bind variable
     order_service = client.get_service('OrderService')
@@ -276,7 +279,7 @@ def verify_order_setup(order_id: int) -> dict:
 
     if 'results' in li_response:
         for li in li_response['results']:
-            li_verification = verify_line_item_setup(li['id'])
+            li_verification = verify_line_item_setup(li['id'], network_code=network_code)
 
             if "error" in li_verification:
                 result["line_items"].append({

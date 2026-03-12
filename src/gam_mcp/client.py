@@ -85,8 +85,12 @@ class GAMClient:
         return self.client.GetDataDownloader(version=self._api_version)
 
 
-# Global client instance
-_gam_client: Optional[GAMClient] = None
+# Multi-network client registry
+_gam_clients: dict[str, GAMClient] = {}
+_default_network_code: Optional[str] = None
+_credentials_path: Optional[str] = None
+_application_name: str = "GAM MCP Server"
+_allowed_network_codes: set[str] = set()
 
 
 def is_gam_client_initialized() -> bool:
@@ -95,41 +99,77 @@ def is_gam_client_initialized() -> bool:
     Returns:
         True if the client is initialized, False otherwise
     """
-    return _gam_client is not None
+    return _default_network_code is not None
 
 
-def get_gam_client() -> GAMClient:
-    """Get the global GAM client instance.
+def get_gam_client(network_code: Optional[str] = None) -> GAMClient:
+    """Get a GAM client instance for the given network code.
+
+    Args:
+        network_code: Optional network code. If not provided, uses the default network.
 
     Returns:
-        The GAM client instance
+        The GAM client instance for the requested network
 
     Raises:
         RuntimeError: If the client has not been initialized
+        ValueError: If the network code is not in the allowed list
     """
-    if _gam_client is None:
+    if _default_network_code is None:
         raise RuntimeError(
             "GAM client not initialized. Call init_gam_client() first."
         )
-    return _gam_client
+
+    target_code = network_code or _default_network_code
+
+    if target_code not in _allowed_network_codes:
+        raise ValueError(
+            f"Network code '{target_code}' is not allowed. "
+            f"Allowed networks: {sorted(_allowed_network_codes)}"
+        )
+
+    if target_code not in _gam_clients:
+        logger.info(f"Creating GAM client for network {target_code}")
+        _gam_clients[target_code] = GAMClient(
+            _credentials_path, target_code, _application_name
+        )
+
+    return _gam_clients[target_code]
 
 
 def init_gam_client(
     credentials_path: str,
     network_code: str,
-    application_name: str = "GAM MCP Server"
+    application_name: str = "GAM MCP Server",
+    allowed_network_codes: Optional[set[str]] = None,
 ) -> GAMClient:
-    """Initialize the global GAM client.
+    """Initialize the GAM client registry.
 
     Args:
         credentials_path: Path to service account JSON credentials file
-        network_code: Ad Manager network code
+        network_code: Default Ad Manager network code
         application_name: Application name for API requests
+        allowed_network_codes: Optional set of additional allowed network codes
 
     Returns:
-        The initialized GAM client
+        The initialized default GAM client
     """
-    global _gam_client
-    _gam_client = GAMClient(credentials_path, network_code, application_name)
-    logger.info(f"GAM client initialized for network {network_code}")
-    return _gam_client
+    global _gam_clients, _default_network_code, _credentials_path
+    global _application_name, _allowed_network_codes
+
+    _credentials_path = credentials_path
+    _default_network_code = network_code
+    _application_name = application_name
+
+    # Build allowed set: always includes the default
+    _allowed_network_codes = {network_code}
+    if allowed_network_codes:
+        _allowed_network_codes.update(allowed_network_codes)
+
+    # Create the default client eagerly
+    client = GAMClient(credentials_path, network_code, application_name)
+    _gam_clients[network_code] = client
+    logger.info(f"GAM client initialized for default network {network_code}")
+    if len(_allowed_network_codes) > 1:
+        logger.info(f"Additional allowed networks: {sorted(_allowed_network_codes - {network_code})}")
+    return client

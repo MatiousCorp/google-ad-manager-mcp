@@ -65,7 +65,8 @@ def run_delivery_report(
     order_id: Optional[int] = None,
     line_item_id: Optional[int] = None,
     include_date_breakdown: bool = True,
-    timeout_seconds: int = 120
+    timeout_seconds: int = 120,
+    network_code: Optional[str] = None
 ) -> dict:
     """Run a delivery report for orders and line items.
 
@@ -86,6 +87,7 @@ def run_delivery_report(
         line_item_id: Optional line item ID to filter by
         include_date_breakdown: If True, includes daily breakdown (default: True)
         timeout_seconds: Maximum time to wait for report (default: 120)
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with report data including rows of delivery statistics
@@ -124,7 +126,8 @@ def run_delivery_report(
         end_month=end_month,
         end_day=end_day,
         filter_statement=filter_statement,
-        timeout_seconds=timeout_seconds
+        timeout_seconds=timeout_seconds,
+        network_code=network_code
     )
 
 
@@ -138,7 +141,8 @@ def run_inventory_report(
     end_day: Optional[int] = None,
     ad_unit_id: Optional[str] = None,
     include_date_breakdown: bool = True,
-    timeout_seconds: int = 120
+    timeout_seconds: int = 120,
+    network_code: Optional[str] = None
 ) -> dict:
     """Run an inventory report for ad units.
 
@@ -156,6 +160,7 @@ def run_inventory_report(
         ad_unit_id: Optional ad unit ID to filter by
         include_date_breakdown: If True, includes daily breakdown (default: True)
         timeout_seconds: Maximum time to wait for report (default: 120)
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with report data including rows of inventory statistics
@@ -186,7 +191,8 @@ def run_inventory_report(
         end_month=end_month,
         end_day=end_day,
         filter_statement=filter_statement,
-        timeout_seconds=timeout_seconds
+        timeout_seconds=timeout_seconds,
+        network_code=network_code
     )
 
 
@@ -201,7 +207,8 @@ def run_custom_report(
     end_month: Optional[int] = None,
     end_day: Optional[int] = None,
     filter_statement: Optional[str] = None,
-    timeout_seconds: int = 120
+    timeout_seconds: int = 120,
+    network_code: Optional[str] = None
 ) -> dict:
     """Run a custom report with specified dimensions and metrics.
 
@@ -225,11 +232,12 @@ def run_custom_report(
         end_day: End day (1-31) for CUSTOM_DATE range
         filter_statement: Optional filter (e.g., "ORDER_ID = 12345")
         timeout_seconds: Maximum seconds to wait for report completion
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with report data including column headers and data rows
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     report_service = client.get_service('ReportService')
 
     # Validate date range

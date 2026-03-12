@@ -155,24 +155,44 @@ class TestServerInitialization:
             with pytest.raises(ValueError) as exc_info:
                 init_client()
 
-            assert "GAM_NETWORK_CODE" in str(exc_info.value)
+            assert "GAM_NETWORK_CODES" in str(exc_info.value)
 
     @patch("gam_mcp.server.is_gam_client_initialized", return_value=False)
     @patch("gam_mcp.server.init_gam_client")
-    def test_init_client_success(self, mock_init, mock_is_init):
-        """Test init_client succeeds with required env vars."""
+    def test_init_client_success_with_network_codes(self, mock_init, mock_is_init):
+        """Test init_client succeeds with GAM_NETWORK_CODES."""
+        from gam_mcp.server import init_client
+
+        with patch.dict('os.environ', {
+            'GAM_CREDENTIALS_PATH': '/path/to/creds.json',
+            'GAM_NETWORK_CODES': '11111111,22222222'
+        }, clear=True):
+            init_client()
+
+            mock_init.assert_called_once_with(
+                credentials_path='/path/to/creds.json',
+                network_code='11111111',
+                application_name='GAM MCP Server',
+                allowed_network_codes={'22222222'},
+            )
+
+    @patch("gam_mcp.server.is_gam_client_initialized", return_value=False)
+    @patch("gam_mcp.server.init_gam_client")
+    def test_init_client_success_with_legacy_network_code(self, mock_init, mock_is_init):
+        """Test init_client falls back to legacy GAM_NETWORK_CODE."""
         from gam_mcp.server import init_client
 
         with patch.dict('os.environ', {
             'GAM_CREDENTIALS_PATH': '/path/to/creds.json',
             'GAM_NETWORK_CODE': '12345678'
-        }):
+        }, clear=True):
             init_client()
 
             mock_init.assert_called_once_with(
                 credentials_path='/path/to/creds.json',
                 network_code='12345678',
-                application_name='GAM MCP Server'
+                application_name='GAM MCP Server',
+                allowed_network_codes=set(),
             )
 
     @patch("gam_mcp.server.is_gam_client_initialized", return_value=True)

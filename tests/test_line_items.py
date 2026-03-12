@@ -273,54 +273,6 @@ class TestDuplicateLineItem:
         mock_service.updateLineItems.assert_called_once()
 
 
-class TestUpdateLineItemName:
-    """Tests for update_line_item_name function."""
-
-    @patch("gam_mcp.tools.line_items.get_gam_client")
-    def test_returns_error_when_not_found(self, mock_get_client):
-        """Test returns error when line item doesn't exist."""
-        mock_client = MagicMock()
-        mock_get_client.return_value = mock_client
-
-        mock_service = MagicMock()
-        mock_service.getLineItemsByStatement.return_value = {}
-        mock_client.get_service.return_value = mock_service
-        mock_client.create_statement.return_value = MagicMock()
-
-        result = line_items.update_line_item_name(
-            line_item_id=999,
-            new_name="New Name"
-        )
-
-        assert "error" in result
-
-    @patch("gam_mcp.tools.line_items.get_gam_client")
-    def test_updates_name_successfully(self, mock_get_client):
-        """Test successfully updates line item name."""
-        mock_client = MagicMock()
-        mock_get_client.return_value = mock_client
-
-        mock_service = MagicMock()
-        mock_service.getLineItemsByStatement.return_value = {
-            "results": [{"id": 123, "name": "Old Name"}]
-        }
-        mock_service.updateLineItems.return_value = [{
-            "id": 123,
-            "name": "New Name"
-        }]
-        mock_client.get_service.return_value = mock_service
-        mock_client.create_statement.return_value = MagicMock()
-
-        result = line_items.update_line_item_name(
-            line_item_id=123,
-            new_name="New Name"
-        )
-
-        assert result["old_name"] == "Old Name"
-        assert result["new_name"] == "New Name"
-        assert "renamed" in result["message"]
-
-
 class TestListLineItemsByOrder:
     """Tests for list_line_items_by_order function."""
 

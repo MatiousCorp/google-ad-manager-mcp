@@ -9,13 +9,16 @@ from ..utils import safe_get, extract_date
 logger = logging.getLogger(__name__)
 
 
-def list_delivering_orders() -> dict:
+def list_delivering_orders(network_code: Optional[str] = None) -> dict:
     """List all orders with line items currently delivering.
+
+    Args:
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with orders and their delivering line items
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
 
     line_item_service = client.get_service('LineItemService')
     order_service = client.get_service('OrderService')
@@ -140,12 +143,17 @@ def list_delivering_orders() -> dict:
     }
 
 
-def get_order(order_id: Optional[int] = None, order_name: Optional[str] = None) -> dict:
+def get_order(
+    order_id: Optional[int] = None,
+    order_name: Optional[str] = None,
+    network_code: Optional[str] = None
+) -> dict:
     """Get order details by ID or name.
 
     Args:
         order_id: Order ID (optional if name provided)
         order_name: Order name to search for (optional if ID provided)
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with order details
@@ -153,7 +161,7 @@ def get_order(order_id: Optional[int] = None, order_name: Optional[str] = None) 
     if not order_id and not order_name:
         return {"error": "Either order_id or order_name must be provided"}
 
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     order_service = client.get_service('OrderService')
 
     statement = client.create_statement()
@@ -202,7 +210,8 @@ def get_order(order_id: Optional[int] = None, order_name: Optional[str] = None) 
 def create_order(
     order_name: str,
     advertiser_id: int,
-    trafficker_id: Optional[int] = None
+    trafficker_id: Optional[int] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Create a new order.
 
@@ -210,11 +219,12 @@ def create_order(
         order_name: Name for the order
         advertiser_id: ID of the advertiser company
         trafficker_id: ID of the trafficker user (optional, defaults to first user)
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with created order details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     order_service = client.get_service('OrderService')
 
     # If no trafficker provided, get the first user
@@ -252,7 +262,8 @@ def create_order(
 def find_or_create_order(
     order_name: str,
     advertiser_id: int,
-    trafficker_id: Optional[int] = None
+    trafficker_id: Optional[int] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Find an existing order or create a new one.
 
@@ -260,11 +271,12 @@ def find_or_create_order(
         order_name: Name for the order
         advertiser_id: ID of the advertiser company
         trafficker_id: ID of the trafficker user (optional)
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with order details (existing or newly created)
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     order_service = client.get_service('OrderService')
 
     # Use bind variables for safe query
@@ -288,7 +300,7 @@ def find_or_create_order(
         }
 
     # Create new order
-    result = create_order(order_name, advertiser_id, trafficker_id)
+    result = create_order(order_name, advertiser_id, trafficker_id, network_code=network_code)
     if "error" not in result:
         result["created"] = True
     return result

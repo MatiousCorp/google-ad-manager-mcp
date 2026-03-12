@@ -8,16 +8,17 @@ from ..utils import safe_get
 logger = logging.getLogger(__name__)
 
 
-def find_advertiser(name: str) -> dict:
+def find_advertiser(name: str, network_code: Optional[str] = None) -> dict:
     """Find an advertiser by name.
 
     Args:
         name: Advertiser name to search for (partial match)
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with matching advertisers
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     company_service = client.get_service('CompanyService')
 
     # Use bind variable for safe query (LIKE requires manual pattern)
@@ -50,16 +51,17 @@ def find_advertiser(name: str) -> dict:
     }
 
 
-def get_advertiser(advertiser_id: int) -> dict:
+def get_advertiser(advertiser_id: int, network_code: Optional[str] = None) -> dict:
     """Get advertiser details by ID.
 
     Args:
         advertiser_id: The advertiser/company ID
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with advertiser details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     company_service = client.get_service('CompanyService')
 
     statement = client.create_statement()
@@ -84,16 +86,17 @@ def get_advertiser(advertiser_id: int) -> dict:
     }
 
 
-def list_advertisers(limit: int = 100) -> dict:
+def list_advertisers(limit: int = 100, network_code: Optional[str] = None) -> dict:
     """List all advertisers.
 
     Args:
         limit: Maximum number of advertisers to return
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with advertisers list
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     company_service = client.get_service('CompanyService')
 
     statement = client.create_statement()
@@ -124,7 +127,8 @@ def create_advertiser(
     name: str,
     email: Optional[str] = None,
     address: Optional[str] = None,
-    comment: Optional[str] = None
+    comment: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Create a new advertiser.
 
@@ -133,11 +137,12 @@ def create_advertiser(
         email: Optional email address
         address: Optional address
         comment: Optional comment
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with created advertiser details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     company_service = client.get_service('CompanyService')
 
     company = {
@@ -169,18 +174,20 @@ def create_advertiser(
 
 def find_or_create_advertiser(
     name: str,
-    email: Optional[str] = None
+    email: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Find an advertiser by exact name or create if not found.
 
     Args:
         name: Exact advertiser name
         email: Optional email (used if creating)
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with advertiser details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     company_service = client.get_service('CompanyService')
 
     # Use bind variables for safe query
@@ -202,7 +209,7 @@ def find_or_create_advertiser(
         }
 
     # Create new
-    result = create_advertiser(name=name, email=email)
+    result = create_advertiser(name=name, email=email, network_code=network_code)
     if "error" not in result:
         result["created"] = True
     return result

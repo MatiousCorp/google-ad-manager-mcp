@@ -284,7 +284,7 @@ class TestFindOrCreateAdvertiser:
         result = advertisers.find_or_create_advertiser(name="New Advertiser")
 
         assert result["created"] is True
-        mock_create.assert_called_once_with(name="New Advertiser", email=None)
+        mock_create.assert_called_once_with(name="New Advertiser", email=None, network_code=None)
 
     @patch("gam_mcp.tools.advertisers.get_gam_client")
     @patch("gam_mcp.tools.advertisers.create_advertiser")
@@ -307,7 +307,8 @@ class TestFindOrCreateAdvertiser:
 
         mock_create.assert_called_once_with(
             name="New Advertiser",
-            email="contact@example.com"
+            email="contact@example.com",
+            network_code=None
         )
 
     @patch("gam_mcp.tools.advertisers.get_gam_client")

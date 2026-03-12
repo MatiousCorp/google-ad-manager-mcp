@@ -5,7 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.12] - 2026-03-10
+## [0.1.13] - 2026-03-10
+
+### Added
+
+- **Multi-network support**: Manage multiple GAM networks with a single server instance
+  - New `GAM_NETWORK_CODES` environment variable: comma-separated list of network codes (first is default)
+  - All tools accept an optional `network_code` parameter to target a specific network
+  - Same service account credentials shared across all networks
+  - Clients are lazily created and cached per network code
+  - Backward compatible: `GAM_NETWORK_CODE` still works for single-network setups
 
 ### Changed
 

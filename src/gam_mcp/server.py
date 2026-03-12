@@ -97,59 +97,81 @@ logger.info("Bearer token authentication middleware enabled")
 # =============================================================================
 
 @mcp.tool()
-def list_delivering_orders() -> str:
+def list_delivering_orders(network_code: Optional[str] = None) -> str:
     """List all orders with line items currently delivering ads.
+
+    Args:
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns a list of orders with their delivering line items,
     including impression and click statistics.
     """
     init_client()
-    result = orders.list_delivering_orders()
+    result = orders.list_delivering_orders(network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def get_order(order_id: Optional[int] = None, order_name: Optional[str] = None) -> str:
+def get_order(
+    order_id: Optional[int] = None,
+    order_name: Optional[str] = None,
+    network_code: Optional[str] = None
+) -> str:
     """Get order details by ID or name.
 
     Args:
         order_id: The order ID (optional if order_name provided)
         order_name: The order name to search for (optional if order_id provided)
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns order details including all line items.
     """
     init_client()
-    result = orders.get_order(order_id=order_id, order_name=order_name)
+    result = orders.get_order(order_id=order_id, order_name=order_name, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def create_order(order_name: str, advertiser_id: int) -> str:
+def create_order(
+    order_name: str,
+    advertiser_id: int,
+    network_code: Optional[str] = None
+) -> str:
     """Create a new order for an advertiser.
 
     Args:
         order_name: Name for the new order
         advertiser_id: ID of the advertiser company
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the created order details.
     """
     init_client()
-    result = orders.create_order(order_name=order_name, advertiser_id=advertiser_id)
+    result = orders.create_order(order_name=order_name, advertiser_id=advertiser_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def find_or_create_order(order_name: str, advertiser_id: int) -> str:
+def find_or_create_order(
+    order_name: str,
+    advertiser_id: int,
+    network_code: Optional[str] = None
+) -> str:
     """Find an existing order by name or create a new one.
 
     Args:
         order_name: Name of the order
         advertiser_id: ID of the advertiser company
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the existing or newly created order.
     """
     init_client()
-    result = orders.find_or_create_order(order_name=order_name, advertiser_id=advertiser_id)
+    result = orders.find_or_create_order(order_name=order_name, advertiser_id=advertiser_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
@@ -158,16 +180,18 @@ def find_or_create_order(order_name: str, advertiser_id: int) -> str:
 # =============================================================================
 
 @mcp.tool()
-def get_line_item(line_item_id: int) -> str:
+def get_line_item(line_item_id: int, network_code: Optional[str] = None) -> str:
     """Get line item details by ID.
 
     Args:
         line_item_id: The line item ID
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns line item details including status, dates, and statistics.
     """
     init_client()
-    result = line_items.get_line_item(line_item_id=line_item_id)
+    result = line_items.get_line_item(line_item_id=line_item_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
@@ -183,7 +207,8 @@ def create_line_item(
     goal_impressions: int = 100000,
     creative_sizes: Optional[str] = None,
     cost_per_unit_micro: int = 0,
-    currency_code: str = "MAD"
+    currency_code: str = "MAD",
+    network_code: Optional[str] = None
 ) -> str:
     """Create a new line item for an order.
 
@@ -211,6 +236,8 @@ def create_line_item(
                        If not provided, uses defaults: 300x250, 300x600, 728x90, 1000x250
         cost_per_unit_micro: Cost per unit in micro amounts (e.g., 1000000 = 1 MAD)
         currency_code: Currency code (default: MAD)
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the created line item details.
     """
@@ -235,7 +262,8 @@ def create_line_item(
         goal_impressions=goal_impressions,
         creative_sizes=parsed_sizes,
         cost_per_unit_micro=cost_per_unit_micro,
-        currency_code=currency_code
+        currency_code=currency_code,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -244,7 +272,8 @@ def create_line_item(
 def duplicate_line_item(
     source_line_item_id: int,
     new_name: str,
-    rename_source: Optional[str] = None
+    rename_source: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> str:
     """Duplicate an existing line item.
 
@@ -252,6 +281,8 @@ def duplicate_line_item(
         source_line_item_id: ID of the line item to duplicate
         new_name: Name for the new line item
         rename_source: Optional new name for the source line item
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns both the source and new line item details.
     """
@@ -259,7 +290,8 @@ def duplicate_line_item(
     result = line_items.duplicate_line_item(
         source_line_item_id=source_line_item_id,
         new_name=new_name,
-        rename_source=rename_source
+        rename_source=rename_source,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -276,7 +308,8 @@ def update_line_item(
     goal_impressions: Optional[int] = None,
     end_year: Optional[int] = None,
     end_month: Optional[int] = None,
-    end_day: Optional[int] = None
+    end_day: Optional[int] = None,
+    network_code: Optional[str] = None
 ) -> str:
     """Update an existing line item's properties.
 
@@ -303,6 +336,8 @@ def update_line_item(
         end_year: End date year
         end_month: End date month (1-12)
         end_day: End date day (1-31)
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Note: At least one field must be provided to update.
     End date requires all three components (year, month, day).
@@ -321,27 +356,30 @@ def update_line_item(
         goal_impressions=goal_impressions,
         end_year=end_year,
         end_month=end_month,
-        end_day=end_day
+        end_day=end_day,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def list_line_items_by_order(order_id: int) -> str:
+def list_line_items_by_order(order_id: int, network_code: Optional[str] = None) -> str:
     """List all line items for an order.
 
     Args:
         order_id: The order ID
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns list of line items with their status and statistics.
     """
     init_client()
-    result = line_items.list_line_items_by_order(order_id=order_id)
+    result = line_items.list_line_items_by_order(order_id=order_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def pause_line_item(line_item_id: int) -> str:
+def pause_line_item(line_item_id: int, network_code: Optional[str] = None) -> str:
     """Pause a delivering line item.
 
     Pausing stops the line item from delivering ads. The line item
@@ -349,16 +387,18 @@ def pause_line_item(line_item_id: int) -> str:
 
     Args:
         line_item_id: The line item ID to pause
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the result of the pause action including new status.
     """
     init_client()
-    result = line_items.pause_line_item(line_item_id=line_item_id)
+    result = line_items.pause_line_item(line_item_id=line_item_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def resume_line_item(line_item_id: int) -> str:
+def resume_line_item(line_item_id: int, network_code: Optional[str] = None) -> str:
     """Resume a paused line item.
 
     Resuming allows a previously paused line item to start
@@ -366,16 +406,18 @@ def resume_line_item(line_item_id: int) -> str:
 
     Args:
         line_item_id: The line item ID to resume
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the result of the resume action including new status.
     """
     init_client()
-    result = line_items.resume_line_item(line_item_id=line_item_id)
+    result = line_items.resume_line_item(line_item_id=line_item_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def archive_line_item(line_item_id: int) -> str:
+def archive_line_item(line_item_id: int, network_code: Optional[str] = None) -> str:
     """Archive a line item.
 
     Archived line items are hidden from the default UI views but can
@@ -384,16 +426,18 @@ def archive_line_item(line_item_id: int) -> str:
 
     Args:
         line_item_id: The line item ID to archive
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the result of the archive action including new status.
     """
     init_client()
-    result = line_items.archive_line_item(line_item_id=line_item_id)
+    result = line_items.archive_line_item(line_item_id=line_item_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def approve_line_item(line_item_id: int) -> str:
+def approve_line_item(line_item_id: int, network_code: Optional[str] = None) -> str:
     """Approve a line item that requires approval.
 
     This is used when the approval workflow is enabled in Google Ad Manager.
@@ -401,11 +445,13 @@ def approve_line_item(line_item_id: int) -> str:
 
     Args:
         line_item_id: The line item ID to approve
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the result of the approve action including new status.
     """
     init_client()
-    result = line_items.approve_line_item(line_item_id=line_item_id)
+    result = line_items.approve_line_item(line_item_id=line_item_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
@@ -420,7 +466,8 @@ def upload_creative(
     click_through_url: str,
     creative_name: Optional[str] = None,
     override_size_width: Optional[int] = None,
-    override_size_height: Optional[int] = None
+    override_size_height: Optional[int] = None,
+    network_code: Optional[str] = None
 ) -> str:
     """Upload an image creative to Ad Manager.
 
@@ -431,6 +478,8 @@ def upload_creative(
         creative_name: Optional name for the creative
         override_size_width: Optional width to override the creative size (for serving into a different sized slot)
         override_size_height: Optional height to override the creative size (for serving into a different sized slot)
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     The creative size is extracted from the filename (e.g., '300x250' in 'banner_300x250.png').
     Use override_size_width and override_size_height together to serve a creative into a different sized placement
@@ -445,7 +494,8 @@ def upload_creative(
         click_through_url=click_through_url,
         creative_name=creative_name,
         override_size_width=override_size_width,
-        override_size_height=override_size_height
+        override_size_height=override_size_height,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -455,7 +505,8 @@ def associate_creative_with_line_item(
     creative_id: int,
     line_item_id: int,
     size_override_width: Optional[int] = None,
-    size_override_height: Optional[int] = None
+    size_override_height: Optional[int] = None,
+    network_code: Optional[str] = None
 ) -> str:
     """Associate a creative with a line item.
 
@@ -464,6 +515,8 @@ def associate_creative_with_line_item(
         line_item_id: The line item ID
         size_override_width: Optional width for size override
         size_override_height: Optional height for size override
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the association details.
     """
@@ -472,7 +525,8 @@ def associate_creative_with_line_item(
         creative_id=creative_id,
         line_item_id=line_item_id,
         size_override_width=size_override_width,
-        size_override_height=size_override_height
+        size_override_height=size_override_height,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -483,7 +537,8 @@ def upload_and_associate_creative(
     advertiser_id: int,
     line_item_id: int,
     click_through_url: str,
-    creative_name: Optional[str] = None
+    creative_name: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> str:
     """Upload a creative and associate it with a line item in one step.
 
@@ -493,6 +548,8 @@ def upload_and_associate_creative(
         line_item_id: ID of the line item
         click_through_url: Destination URL when clicked
         creative_name: Optional name for the creative
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the creative and association details.
     """
@@ -502,7 +559,8 @@ def upload_and_associate_creative(
         advertiser_id=advertiser_id,
         line_item_id=line_item_id,
         click_through_url=click_through_url,
-        creative_name=creative_name
+        creative_name=creative_name,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -513,7 +571,8 @@ def bulk_upload_creatives(
     advertiser_id: int,
     line_item_id: int,
     click_through_url: str,
-    name_prefix: Optional[str] = None
+    name_prefix: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> str:
     """Upload all creatives from a folder and associate with a line item.
 
@@ -523,6 +582,8 @@ def bulk_upload_creatives(
         line_item_id: ID of the line item
         click_through_url: Destination URL when clicked
         name_prefix: Optional prefix for creative names
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Supported formats: jpg, jpeg, png, gif.
     Returns results for all uploads.
@@ -533,39 +594,49 @@ def bulk_upload_creatives(
         advertiser_id=advertiser_id,
         line_item_id=line_item_id,
         click_through_url=click_through_url,
-        name_prefix=name_prefix
+        name_prefix=name_prefix,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def get_creative(creative_id: int) -> str:
+def get_creative(creative_id: int, network_code: Optional[str] = None) -> str:
     """Get creative details by ID.
 
     Args:
         creative_id: The creative ID
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns creative details including size and destination URL.
     """
     init_client()
-    result = creatives.get_creative(creative_id=creative_id)
+    result = creatives.get_creative(creative_id=creative_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def list_creatives_by_advertiser(advertiser_id: int, limit: int = 100) -> str:
+def list_creatives_by_advertiser(
+    advertiser_id: int,
+    limit: int = 100,
+    network_code: Optional[str] = None
+) -> str:
     """List creatives for an advertiser.
 
     Args:
         advertiser_id: The advertiser ID
         limit: Maximum number of creatives to return (default: 100)
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns list of creatives.
     """
     init_client()
     result = creatives.list_creatives_by_advertiser(
         advertiser_id=advertiser_id,
-        limit=limit
+        limit=limit,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -574,7 +645,8 @@ def list_creatives_by_advertiser(advertiser_id: int, limit: int = 100) -> str:
 def update_creative(
     creative_id: int,
     destination_url: Optional[str] = None,
-    name: Optional[str] = None
+    name: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> str:
     """Update an existing creative's properties.
 
@@ -582,6 +654,8 @@ def update_creative(
         creative_id: The creative ID to update
         destination_url: New destination/click-through URL for the creative
         name: New name for the creative
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     At least one of destination_url or name must be provided.
     Returns the updated creative details.
@@ -590,25 +664,33 @@ def update_creative(
     result = creatives.update_creative(
         creative_id=creative_id,
         destination_url=destination_url,
-        name=name
+        name=name,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def list_creatives_by_line_item(line_item_id: int, limit: int = 100) -> str:
+def list_creatives_by_line_item(
+    line_item_id: int,
+    limit: int = 100,
+    network_code: Optional[str] = None
+) -> str:
     """List creatives associated with a line item.
 
     Args:
         line_item_id: The line item ID
         limit: Maximum number of creatives to return (default: 100)
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns list of creatives with their association status.
     """
     init_client()
     result = creatives.list_creatives_by_line_item(
         line_item_id=line_item_id,
-        limit=limit
+        limit=limit,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -617,7 +699,8 @@ def list_creatives_by_line_item(line_item_id: int, limit: int = 100) -> str:
 def get_creative_preview_url(
     line_item_id: int,
     creative_id: int,
-    site_url: str
+    site_url: str,
+    network_code: Optional[str] = None
 ) -> str:
     """Get a preview URL for a creative associated with a line item.
 
@@ -630,6 +713,8 @@ def get_creative_preview_url(
         creative_id: The creative ID
         site_url: The URL of the site where you want to preview the creative
             (e.g., "https://abc.com")
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the preview URL that can be opened in a browser.
     """
@@ -637,7 +722,8 @@ def get_creative_preview_url(
     result = creatives.get_creative_preview_url(
         line_item_id=line_item_id,
         creative_id=creative_id,
-        site_url=site_url
+        site_url=site_url,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -650,7 +736,8 @@ def create_third_party_creative(
     height: int,
     snippet: str,
     expanded_snippet: Optional[str] = None,
-    is_safe_frame_compatible: bool = True
+    is_safe_frame_compatible: bool = True,
+    network_code: Optional[str] = None
 ) -> str:
     """Create a third-party creative (HTML/JavaScript ad tag).
 
@@ -665,6 +752,8 @@ def create_third_party_creative(
         snippet: The HTML/JavaScript code snippet (the ad tag)
         expanded_snippet: Optional expanded snippet for expandable creatives
         is_safe_frame_compatible: Whether the creative works in SafeFrame (default: True)
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the created creative details.
     """
@@ -676,7 +765,8 @@ def create_third_party_creative(
         height=height,
         snippet=snippet,
         expanded_snippet=expanded_snippet,
-        is_safe_frame_compatible=is_safe_frame_compatible
+        is_safe_frame_compatible=is_safe_frame_compatible,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -686,44 +776,50 @@ def create_third_party_creative(
 # =============================================================================
 
 @mcp.tool()
-def find_advertiser(name: str) -> str:
+def find_advertiser(name: str, network_code: Optional[str] = None) -> str:
     """Find an advertiser by name (partial match).
 
     Args:
         name: Advertiser name to search for
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns list of matching advertisers.
     """
     init_client()
-    result = advertisers.find_advertiser(name=name)
+    result = advertisers.find_advertiser(name=name, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def get_advertiser(advertiser_id: int) -> str:
+def get_advertiser(advertiser_id: int, network_code: Optional[str] = None) -> str:
     """Get advertiser details by ID.
 
     Args:
         advertiser_id: The advertiser/company ID
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns advertiser details.
     """
     init_client()
-    result = advertisers.get_advertiser(advertiser_id=advertiser_id)
+    result = advertisers.get_advertiser(advertiser_id=advertiser_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def list_advertisers(limit: int = 100) -> str:
+def list_advertisers(limit: int = 100, network_code: Optional[str] = None) -> str:
     """List all advertisers.
 
     Args:
         limit: Maximum number of advertisers to return (default: 100)
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns list of advertisers.
     """
     init_client()
-    result = advertisers.list_advertisers(limit=limit)
+    result = advertisers.list_advertisers(limit=limit, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
@@ -731,7 +827,8 @@ def list_advertisers(limit: int = 100) -> str:
 def create_advertiser(
     name: str,
     email: Optional[str] = None,
-    address: Optional[str] = None
+    address: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> str:
     """Create a new advertiser.
 
@@ -739,6 +836,8 @@ def create_advertiser(
         name: Advertiser name
         email: Optional email address
         address: Optional address
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the created advertiser details.
     """
@@ -746,23 +845,30 @@ def create_advertiser(
     result = advertisers.create_advertiser(
         name=name,
         email=email,
-        address=address
+        address=address,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def find_or_create_advertiser(name: str, email: Optional[str] = None) -> str:
+def find_or_create_advertiser(
+    name: str,
+    email: Optional[str] = None,
+    network_code: Optional[str] = None
+) -> str:
     """Find an advertiser by exact name or create if not found.
 
     Args:
         name: Exact advertiser name
         email: Optional email (used if creating)
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns the existing or newly created advertiser.
     """
     init_client()
-    result = advertisers.find_or_create_advertiser(name=name, email=email)
+    result = advertisers.find_or_create_advertiser(name=name, email=email, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
@@ -771,11 +877,13 @@ def find_or_create_advertiser(name: str, email: Optional[str] = None) -> str:
 # =============================================================================
 
 @mcp.tool()
-def verify_line_item_setup(line_item_id: int) -> str:
+def verify_line_item_setup(line_item_id: int, network_code: Optional[str] = None) -> str:
     """Verify line item setup including creative placeholders and associations.
 
     Args:
         line_item_id: The line item ID to verify
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Checks:
     - Creative placeholders (expected sizes)
@@ -785,35 +893,39 @@ def verify_line_item_setup(line_item_id: int) -> str:
     Returns verification results with any issues found.
     """
     init_client()
-    result = verification.verify_line_item_setup(line_item_id=line_item_id)
+    result = verification.verify_line_item_setup(line_item_id=line_item_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def check_line_item_delivery_status(line_item_id: int) -> str:
+def check_line_item_delivery_status(line_item_id: int, network_code: Optional[str] = None) -> str:
     """Check detailed delivery status for a line item.
 
     Args:
         line_item_id: The line item ID to check
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns delivery progress including impressions, clicks, and goal progress.
     """
     init_client()
-    result = verification.check_line_item_delivery_status(line_item_id=line_item_id)
+    result = verification.check_line_item_delivery_status(line_item_id=line_item_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
 @mcp.tool()
-def verify_order_setup(order_id: int) -> str:
+def verify_order_setup(order_id: int, network_code: Optional[str] = None) -> str:
     """Verify complete order setup including all line items.
 
     Args:
         order_id: The order ID to verify
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns comprehensive verification of the order and all its line items.
     """
     init_client()
-    result = verification.verify_order_setup(order_id=order_id)
+    result = verification.verify_order_setup(order_id=order_id, network_code=network_code)
     return json.dumps(result, indent=2)
 
 
@@ -833,7 +945,8 @@ def run_delivery_report(
     order_id: Optional[int] = None,
     line_item_id: Optional[int] = None,
     include_date_breakdown: bool = True,
-    timeout_seconds: int = 120
+    timeout_seconds: int = 120,
+    network_code: Optional[str] = None
 ) -> str:
     """Run a delivery report for orders and line items.
 
@@ -853,6 +966,8 @@ def run_delivery_report(
         line_item_id: Optional line item ID to filter by
         include_date_breakdown: If True, includes daily breakdown (default: True)
         timeout_seconds: Maximum time to wait for report (default: 120)
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns report data with impressions, clicks, CTR, and revenue statistics.
     """
@@ -868,7 +983,8 @@ def run_delivery_report(
         order_id=order_id,
         line_item_id=line_item_id,
         include_date_breakdown=include_date_breakdown,
-        timeout_seconds=timeout_seconds
+        timeout_seconds=timeout_seconds,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -884,7 +1000,8 @@ def run_inventory_report(
     end_day: Optional[int] = None,
     ad_unit_id: Optional[str] = None,
     include_date_breakdown: bool = True,
-    timeout_seconds: int = 120
+    timeout_seconds: int = 120,
+    network_code: Optional[str] = None
 ) -> str:
     """Run an inventory report for ad units.
 
@@ -901,6 +1018,8 @@ def run_inventory_report(
         ad_unit_id: Optional ad unit ID to filter by
         include_date_breakdown: If True, includes daily breakdown (default: True)
         timeout_seconds: Maximum time to wait for report (default: 120)
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns report data with ad requests, impressions, and fill rate statistics.
     """
@@ -915,7 +1034,8 @@ def run_inventory_report(
         end_day=end_day,
         ad_unit_id=ad_unit_id,
         include_date_breakdown=include_date_breakdown,
-        timeout_seconds=timeout_seconds
+        timeout_seconds=timeout_seconds,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -932,7 +1052,8 @@ def run_custom_report(
     end_month: Optional[int] = None,
     end_day: Optional[int] = None,
     filter_statement: Optional[str] = None,
-    timeout_seconds: int = 120
+    timeout_seconds: int = 120,
+    network_code: Optional[str] = None
 ) -> str:
     """Run a custom report with specified dimensions and metrics.
 
@@ -956,6 +1077,8 @@ def run_custom_report(
         end_day: End day (1-31) for CUSTOM_DATE range
         filter_statement: Optional filter (e.g., "ORDER_ID = 12345")
         timeout_seconds: Maximum seconds to wait for report completion
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     Returns report data with specified dimensions and metrics.
     """
@@ -983,7 +1106,8 @@ def run_custom_report(
         end_month=end_month,
         end_day=end_day,
         filter_statement=filter_statement,
-        timeout_seconds=timeout_seconds
+        timeout_seconds=timeout_seconds,
+        network_code=network_code
     )
     return json.dumps(result, indent=2)
 
@@ -1005,7 +1129,8 @@ def create_campaign(
     target_ad_unit_id: str,
     goal_impressions: int = 100000,
     line_item_type: str = "STANDARD",
-    creative_sizes: Optional[str] = None
+    creative_sizes: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> str:
     """Create a complete campaign: find/create advertiser, order, line item, and upload creatives.
 
@@ -1022,6 +1147,8 @@ def create_campaign(
         goal_impressions: Impression goal (default: 100000)
         line_item_type: Type of line item (STANDARD, SPONSORSHIP, NETWORK, BULK, PRICE_PRIORITY, HOUSE, etc.)
         creative_sizes: JSON string of sizes, e.g. '[{"width": 300, "height": 250}, {"width": 728, "height": 90}]'
+        network_code: Optional GAM network code to target a specific network.
+            If not provided, uses the default network.
 
     This is a complete workflow that:
     1. Finds or creates the advertiser
@@ -1052,7 +1179,7 @@ def create_campaign(
 
     try:
         # Step 1: Find or create advertiser
-        adv_result = advertisers.find_or_create_advertiser(name=advertiser_name)
+        adv_result = advertisers.find_or_create_advertiser(name=advertiser_name, network_code=network_code)
         if "error" in adv_result:
             result["errors"].append(f"Advertiser: {adv_result['error']}")
             return json.dumps(result, indent=2)
@@ -1062,7 +1189,8 @@ def create_campaign(
         # Step 2: Find or create order
         order_result = orders.find_or_create_order(
             order_name=order_name,
-            advertiser_id=advertiser_id
+            advertiser_id=advertiser_id,
+            network_code=network_code
         )
         if "error" in order_result:
             result["errors"].append(f"Order: {order_result['error']}")
@@ -1080,7 +1208,8 @@ def create_campaign(
             target_ad_unit_id=target_ad_unit_id,
             goal_impressions=goal_impressions,
             line_item_type=line_item_type,
-            creative_sizes=parsed_sizes
+            creative_sizes=parsed_sizes,
+            network_code=network_code
         )
         if "error" in li_result:
             result["errors"].append(f"Line Item: {li_result['error']}")
@@ -1094,7 +1223,8 @@ def create_campaign(
             advertiser_id=advertiser_id,
             line_item_id=line_item_id,
             click_through_url=click_through_url,
-            name_prefix=f"{advertiser_name} - {order_name}"
+            name_prefix=f"{advertiser_name} - {order_name}",
+            network_code=network_code
         )
         result["creatives"] = creative_result
 
@@ -1125,18 +1255,35 @@ def init_client():
             "Set it to the path of your Google Ad Manager service account JSON file."
         )
 
-    network_code = os.environ.get("GAM_NETWORK_CODE")
-    if not network_code:
+    # Parse network codes - supports both GAM_NETWORK_CODES (preferred) and GAM_NETWORK_CODE (legacy)
+    network_codes_str = os.environ.get("GAM_NETWORK_CODES", "")
+    network_codes = [
+        code.strip() for code in network_codes_str.split(",") if code.strip()
+    ]
+
+    # Fall back to legacy single network code
+    if not network_codes:
+        legacy_code = os.environ.get("GAM_NETWORK_CODE", "")
+        if legacy_code.strip():
+            network_codes = [legacy_code.strip()]
+
+    if not network_codes:
         raise ValueError(
-            "GAM_NETWORK_CODE environment variable is required. "
-            "Set it to your Google Ad Manager network code."
+            "GAM_NETWORK_CODES environment variable is required. "
+            "Set it to a comma-separated list of GAM network codes (first is the default)."
         )
 
-    logger.info(f"Initializing GAM client for network {network_code}")
+    default_network_code = network_codes[0]
+    allowed_network_codes = set(network_codes[1:]) if len(network_codes) > 1 else set()
+
+    logger.info(f"Initializing GAM client for default network {default_network_code}")
+    if allowed_network_codes:
+        logger.info(f"Additional networks: {sorted(allowed_network_codes)}")
     init_gam_client(
         credentials_path=credentials_path,
-        network_code=network_code,
-        application_name="GAM MCP Server"
+        network_code=default_network_code,
+        application_name="GAM MCP Server",
+        allowed_network_codes=allowed_network_codes,
     )
 
 

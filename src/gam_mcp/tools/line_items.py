@@ -17,16 +17,17 @@ DEFAULT_CREATIVE_PLACEHOLDERS = [
 ]
 
 
-def get_line_item(line_item_id: int) -> dict:
+def get_line_item(line_item_id: int, network_code: Optional[str] = None) -> dict:
     """Get line item details by ID.
 
     Args:
         line_item_id: The line item ID
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with line item details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     line_item_service = client.get_service('LineItemService')
 
     statement = client.create_statement()
@@ -99,7 +100,8 @@ def create_line_item(
     goal_impressions: int = 100000,
     creative_sizes: Optional[List[dict]] = None,
     cost_per_unit_micro: int = 0,
-    currency_code: str = "MAD"
+    currency_code: str = "MAD",
+    network_code: Optional[str] = None
 ) -> dict:
     """Create a new line item.
 
@@ -115,11 +117,12 @@ def create_line_item(
         creative_sizes: List of size dicts (optional, uses defaults if not provided)
         cost_per_unit_micro: Cost in micro amounts
         currency_code: Currency code
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with created line item details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     line_item_service = client.get_service('LineItemService')
 
     # Use default sizes if not provided
@@ -191,7 +194,8 @@ def create_line_item(
 def duplicate_line_item(
     source_line_item_id: int,
     new_name: str,
-    rename_source: Optional[str] = None
+    rename_source: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Duplicate an existing line item.
 
@@ -199,11 +203,12 @@ def duplicate_line_item(
         source_line_item_id: ID of line item to duplicate
         new_name: Name for the new line item
         rename_source: Optional new name for the source line item
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with both line item details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     line_item_service = client.get_service('LineItemService')
 
     # Fetch source line item using bind variable
@@ -282,7 +287,8 @@ def update_line_item(
     goal_impressions: Optional[int] = None,
     end_year: Optional[int] = None,
     end_month: Optional[int] = None,
-    end_day: Optional[int] = None
+    end_day: Optional[int] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Update an existing line item's properties.
 
@@ -300,11 +306,12 @@ def update_line_item(
         end_year: End date year
         end_month: End date month (1-12)
         end_day: End date day (1-31)
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with updated line item details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     line_item_service = client.get_service('LineItemService')
 
     # Fetch the existing line item
@@ -413,16 +420,17 @@ def update_line_item(
     }
 
 
-def list_line_items_by_order(order_id: int) -> dict:
+def list_line_items_by_order(order_id: int, network_code: Optional[str] = None) -> dict:
     """List all line items for an order.
 
     Args:
         order_id: The order ID
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with line items
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     line_item_service = client.get_service('LineItemService')
 
     statement = client.create_statement()
@@ -454,18 +462,23 @@ def list_line_items_by_order(order_id: int) -> dict:
     }
 
 
-def _perform_line_item_action(line_item_id: int, action_type: str) -> dict:
+def _perform_line_item_action(
+    line_item_id: int,
+    action_type: str,
+    network_code: Optional[str] = None
+) -> dict:
     """Perform an action on a line item.
 
     Args:
         line_item_id: The line item ID
         action_type: Action to perform (PauseLineItems, ResumeLineItems,
                      ArchiveLineItems, ApproveLineItems)
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with action result
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     line_item_service = client.get_service('LineItemService')
 
     # Build statement for the specific line item
@@ -504,31 +517,33 @@ def _perform_line_item_action(line_item_id: int, action_type: str) -> dict:
     }
 
 
-def pause_line_item(line_item_id: int) -> dict:
+def pause_line_item(line_item_id: int, network_code: Optional[str] = None) -> dict:
     """Pause a delivering line item.
 
     Args:
         line_item_id: The line item ID to pause
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with result of the pause action
     """
-    return _perform_line_item_action(line_item_id, 'PauseLineItems')
+    return _perform_line_item_action(line_item_id, 'PauseLineItems', network_code=network_code)
 
 
-def resume_line_item(line_item_id: int) -> dict:
+def resume_line_item(line_item_id: int, network_code: Optional[str] = None) -> dict:
     """Resume a paused line item.
 
     Args:
         line_item_id: The line item ID to resume
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with result of the resume action
     """
-    return _perform_line_item_action(line_item_id, 'ResumeLineItems')
+    return _perform_line_item_action(line_item_id, 'ResumeLineItems', network_code=network_code)
 
 
-def archive_line_item(line_item_id: int) -> dict:
+def archive_line_item(line_item_id: int, network_code: Optional[str] = None) -> dict:
     """Archive a line item.
 
     Archived line items are hidden from the default UI views but can still
@@ -536,14 +551,15 @@ def archive_line_item(line_item_id: int) -> dict:
 
     Args:
         line_item_id: The line item ID to archive
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with result of the archive action
     """
-    return _perform_line_item_action(line_item_id, 'ArchiveLineItems')
+    return _perform_line_item_action(line_item_id, 'ArchiveLineItems', network_code=network_code)
 
 
-def approve_line_item(line_item_id: int) -> dict:
+def approve_line_item(line_item_id: int, network_code: Optional[str] = None) -> dict:
     """Approve a line item that requires approval.
 
     This is used when the approval workflow is enabled in GAM.
@@ -551,8 +567,9 @@ def approve_line_item(line_item_id: int) -> dict:
 
     Args:
         line_item_id: The line item ID to approve
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with result of the approve action
     """
-    return _perform_line_item_action(line_item_id, 'ApproveLineItems')
+    return _perform_line_item_action(line_item_id, 'ApproveLineItems', network_code=network_code)

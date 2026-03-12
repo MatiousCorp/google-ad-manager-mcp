@@ -116,9 +116,13 @@ class TestGlobalClient:
     """Tests for global client management functions."""
 
     def setup_method(self):
-        """Reset global client before each test."""
+        """Reset global client state before each test."""
         import gam_mcp.client as client_module
-        client_module._gam_client = None
+        client_module._gam_clients = {}
+        client_module._default_network_code = None
+        client_module._credentials_path = None
+        client_module._application_name = "GAM MCP Server"
+        client_module._allowed_network_codes = set()
 
     def test_get_gam_client_raises_without_init(self):
         """Test get_gam_client raises error if not initialized."""
@@ -173,3 +177,105 @@ class TestGlobalClient:
             "12345678",
             "Custom App",
         )
+
+
+class TestMultiNetworkClient:
+    """Tests for multi-network client support."""
+
+    def setup_method(self):
+        """Reset global client state before each test."""
+        import gam_mcp.client as client_module
+        client_module._gam_clients = {}
+        client_module._default_network_code = None
+        client_module._credentials_path = None
+        client_module._application_name = "GAM MCP Server"
+        client_module._allowed_network_codes = set()
+
+    @patch("gam_mcp.client.GAMClient")
+    def test_get_default_client(self, mock_gam_client_class):
+        """Test get_gam_client with no args returns default network client."""
+        mock_client = MagicMock()
+        mock_gam_client_class.return_value = mock_client
+
+        init_gam_client(
+            credentials_path="/path/to/creds.json",
+            network_code="11111111",
+        )
+
+        result = get_gam_client()
+        assert result == mock_client
+
+    @patch("gam_mcp.client.GAMClient")
+    def test_get_client_for_allowed_network(self, mock_gam_client_class):
+        """Test get_gam_client creates client for an allowed additional network."""
+        default_client = MagicMock()
+        other_client = MagicMock()
+        mock_gam_client_class.side_effect = [default_client, other_client]
+
+        init_gam_client(
+            credentials_path="/path/to/creds.json",
+            network_code="11111111",
+            allowed_network_codes={"22222222"},
+        )
+
+        result = get_gam_client(network_code="22222222")
+        assert result == other_client
+
+        # Verify it was created with the right network code
+        assert mock_gam_client_class.call_count == 2
+        mock_gam_client_class.assert_called_with(
+            "/path/to/creds.json", "22222222", "GAM MCP Server"
+        )
+
+    @patch("gam_mcp.client.GAMClient")
+    def test_get_client_disallowed_network_raises(self, mock_gam_client_class):
+        """Test get_gam_client raises ValueError for disallowed network."""
+        mock_gam_client_class.return_value = MagicMock()
+
+        init_gam_client(
+            credentials_path="/path/to/creds.json",
+            network_code="11111111",
+        )
+
+        with pytest.raises(ValueError) as exc_info:
+            get_gam_client(network_code="99999999")
+
+        assert "not allowed" in str(exc_info.value)
+        assert "99999999" in str(exc_info.value)
+
+    @patch("gam_mcp.client.GAMClient")
+    def test_clients_are_cached(self, mock_gam_client_class):
+        """Test clients are cached and reused on repeated calls."""
+        default_client = MagicMock()
+        other_client = MagicMock()
+        mock_gam_client_class.side_effect = [default_client, other_client]
+
+        init_gam_client(
+            credentials_path="/path/to/creds.json",
+            network_code="11111111",
+            allowed_network_codes={"22222222"},
+        )
+
+        # First call creates the client
+        result1 = get_gam_client(network_code="22222222")
+        # Second call returns cached
+        result2 = get_gam_client(network_code="22222222")
+
+        assert result1 is result2
+        # Only 2 GAMClient instances created: default + one additional
+        assert mock_gam_client_class.call_count == 2
+
+    @patch("gam_mcp.client.GAMClient")
+    def test_default_network_always_allowed(self, mock_gam_client_class):
+        """Test default network is always in the allowed set."""
+        mock_gam_client_class.return_value = MagicMock()
+
+        init_gam_client(
+            credentials_path="/path/to/creds.json",
+            network_code="11111111",
+            allowed_network_codes=set(),  # empty additional set
+        )
+
+        # Should not raise - default is always allowed
+        result = get_gam_client(network_code="11111111")
+        assert result is not None

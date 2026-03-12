@@ -68,11 +68,36 @@ The server uses environment variables for configuration:
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `GAM_CREDENTIALS_PATH` | Path to service account JSON | **Yes** |
-| `GAM_NETWORK_CODE` | Ad Manager network code | **Yes** |
+| `GAM_NETWORK_CODES` | Comma-separated list of GAM network codes (first is the default) | **Yes** |
 | `GAM_MCP_TRANSPORT` | Transport mode: `stdio` or `http` | No (default: `stdio`) |
 | `GAM_MCP_HOST` | Server host (HTTP mode only) | No (default: `0.0.0.0`) |
 | `GAM_MCP_PORT` | Server port (HTTP mode only) | No (default: `8000`) |
 | `GAM_MCP_AUTH_TOKEN` | Authentication token (HTTP mode only) | No (auto-generated if not set) |
+
+### Multi-Network Support
+
+You can manage multiple GAM networks with a single server instance. List all network codes in `GAM_NETWORK_CODES` — the first one is the default:
+
+```bash
+export GAM_NETWORK_CODES="31083078,22706375620,98765432"
+```
+
+All tools accept an optional `network_code` parameter. When omitted, the first (default) network is used. The same service account credentials are shared across all networks — just ensure the service account email has been added as a user in each network.
+
+For Claude Code MCP configuration:
+
+```json
+{
+  "google-ad-manager": {
+    "command": "uvx",
+    "args": ["google-ad-manager-mcp"],
+    "env": {
+      "GAM_CREDENTIALS_PATH": "/path/to/credentials.json",
+      "GAM_NETWORK_CODES": "31083078,22706375620"
+    }
+  }
+}
+```
 
 ## Authentication
 

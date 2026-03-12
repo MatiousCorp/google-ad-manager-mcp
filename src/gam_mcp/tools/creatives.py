@@ -32,7 +32,8 @@ def upload_creative(
     click_through_url: str,
     creative_name: Optional[str] = None,
     override_size_width: Optional[int] = None,
-    override_size_height: Optional[int] = None
+    override_size_height: Optional[int] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Upload an image creative to Ad Manager.
 
@@ -43,11 +44,12 @@ def upload_creative(
         creative_name: Optional name for the creative (defaults to auto-generated)
         override_size_width: Optional width to override the creative size (for serving into different slot)
         override_size_height: Optional height to override the creative size (for serving into different slot)
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with created creative details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     creative_service = client.get_service('CreativeService')
 
     path = Path(file_path)
@@ -127,7 +129,8 @@ def upload_creative_from_base64(
     click_through_url: str,
     width: int,
     height: int,
-    creative_name: Optional[str] = None
+    creative_name: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Upload an image creative from base64 data.
 
@@ -139,11 +142,12 @@ def upload_creative_from_base64(
         width: Image width
         height: Image height
         creative_name: Optional name for the creative
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with created creative details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     creative_service = client.get_service('CreativeService')
 
     if creative_name is None:
@@ -185,7 +189,8 @@ def associate_creative_with_line_item(
     creative_id: int,
     line_item_id: int,
     size_override_width: Optional[int] = None,
-    size_override_height: Optional[int] = None
+    size_override_height: Optional[int] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Associate a creative with a line item.
 
@@ -194,11 +199,12 @@ def associate_creative_with_line_item(
         line_item_id: The line item ID
         size_override_width: Optional width for size override
         size_override_height: Optional height for size override
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with association details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     lica_service = client.get_service('LineItemCreativeAssociationService')
 
     lica = {
@@ -231,7 +237,8 @@ def upload_and_associate_creative(
     advertiser_id: int,
     line_item_id: int,
     click_through_url: str,
-    creative_name: Optional[str] = None
+    creative_name: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Upload a creative and associate it with a line item in one operation.
 
@@ -241,6 +248,7 @@ def upload_and_associate_creative(
         line_item_id: ID of the line item
         click_through_url: Destination URL
         creative_name: Optional name for the creative
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with both upload and association results
@@ -250,7 +258,8 @@ def upload_and_associate_creative(
         file_path=file_path,
         advertiser_id=advertiser_id,
         click_through_url=click_through_url,
-        creative_name=creative_name
+        creative_name=creative_name,
+        network_code=network_code
     )
 
     if "error" in upload_result:
@@ -261,7 +270,8 @@ def upload_and_associate_creative(
     # Then associate
     assoc_result = associate_creative_with_line_item(
         creative_id=creative_id,
-        line_item_id=line_item_id
+        line_item_id=line_item_id,
+        network_code=network_code
     )
 
     if "error" in assoc_result:
@@ -285,7 +295,8 @@ def bulk_upload_creatives(
     advertiser_id: int,
     line_item_id: int,
     click_through_url: str,
-    name_prefix: Optional[str] = None
+    name_prefix: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Upload all creatives from a folder and associate with a line item.
 
@@ -295,6 +306,7 @@ def bulk_upload_creatives(
         line_item_id: ID of the line item
         click_through_url: Destination URL
         name_prefix: Optional prefix for creative names
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with upload results
@@ -334,7 +346,8 @@ def bulk_upload_creatives(
             advertiser_id=advertiser_id,
             line_item_id=line_item_id,
             click_through_url=click_through_url,
-            creative_name=creative_name
+            creative_name=creative_name,
+            network_code=network_code
         )
 
         if "error" in result:
@@ -356,16 +369,17 @@ def bulk_upload_creatives(
     return results
 
 
-def get_creative(creative_id: int) -> dict:
+def get_creative(creative_id: int, network_code: Optional[str] = None) -> dict:
     """Get creative details by ID.
 
     Args:
         creative_id: The creative ID
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with creative details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     creative_service = client.get_service('CreativeService')
 
     statement = client.create_statement()
@@ -389,17 +403,22 @@ def get_creative(creative_id: int) -> dict:
     }
 
 
-def list_creatives_by_advertiser(advertiser_id: int, limit: int = 100) -> dict:
+def list_creatives_by_advertiser(
+    advertiser_id: int,
+    limit: int = 100,
+    network_code: Optional[str] = None
+) -> dict:
     """List creatives for an advertiser.
 
     Args:
         advertiser_id: The advertiser ID
         limit: Maximum number of creatives to return
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with creatives list
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     creative_service = client.get_service('CreativeService')
 
     statement = client.create_statement()
@@ -432,7 +451,8 @@ def list_creatives_by_advertiser(advertiser_id: int, limit: int = 100) -> dict:
 def update_creative(
     creative_id: int,
     destination_url: Optional[str] = None,
-    name: Optional[str] = None
+    name: Optional[str] = None,
+    network_code: Optional[str] = None
 ) -> dict:
     """Update an existing creative's properties.
 
@@ -440,11 +460,12 @@ def update_creative(
         creative_id: The creative ID to update
         destination_url: New destination URL (click-through URL)
         name: New name for the creative
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with updated creative details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     creative_service = client.get_service('CreativeService')
 
     # First, get the existing creative
@@ -492,7 +513,8 @@ def create_third_party_creative(
     height: int,
     snippet: str,
     expanded_snippet: Optional[str] = None,
-    is_safe_frame_compatible: bool = True
+    is_safe_frame_compatible: bool = True,
+    network_code: Optional[str] = None
 ) -> dict:
     """Create a third-party creative (HTML/JavaScript ad tag).
 
@@ -507,11 +529,12 @@ def create_third_party_creative(
         snippet: The HTML/JavaScript code snippet (the ad tag)
         expanded_snippet: Optional expanded snippet for expandable creatives
         is_safe_frame_compatible: Whether the creative works in SafeFrame (default: True)
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with created creative details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     creative_service = client.get_service('CreativeService')
 
     creative = {
@@ -552,7 +575,8 @@ def create_third_party_creative(
 def get_creative_preview_url(
     line_item_id: int,
     creative_id: int,
-    site_url: str
+    site_url: str,
+    network_code: Optional[str] = None
 ) -> dict:
     """Get a preview URL for a creative associated with a line item.
 
@@ -563,11 +587,12 @@ def get_creative_preview_url(
         line_item_id: The line item ID
         creative_id: The creative ID
         site_url: The URL of the site where you want to preview the creative
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with preview URL
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     lica_service = client.get_service('LineItemCreativeAssociationService')
 
     try:
@@ -595,17 +620,22 @@ def get_creative_preview_url(
         }
 
 
-def list_creatives_by_line_item(line_item_id: int, limit: int = 100) -> dict:
+def list_creatives_by_line_item(
+    line_item_id: int,
+    limit: int = 100,
+    network_code: Optional[str] = None
+) -> dict:
     """List creatives associated with a line item.
 
     Args:
         line_item_id: The line item ID
         limit: Maximum number of creatives to return
+        network_code: Optional GAM network code. Uses default if not provided.
 
     Returns:
         dict with creatives list and association details
     """
-    client = get_gam_client()
+    client = get_gam_client(network_code=network_code)
     lica_service = client.get_service('LineItemCreativeAssociationService')
     creative_service = client.get_service('CreativeService')
 
