@@ -25,6 +25,10 @@ Managing Google Ad Manager is tedious. Creating campaigns, uploading creatives, 
 
 No more clicking. Just tell Claude what you need.
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/matiouscorp-google-ad-manager-mcp).
+
 ## Features
 
 - **Order Management**: List, create, and manage orders
