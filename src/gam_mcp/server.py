@@ -1276,14 +1276,19 @@ def init_client():
     default_network_code = network_codes[0]
     allowed_network_codes = set(network_codes[1:]) if len(network_codes) > 1 else set()
 
+    api_version = os.environ.get("GAM_API_VERSION") or None
+
     logger.info(f"Initializing GAM client for default network {default_network_code}")
     if allowed_network_codes:
         logger.info(f"Additional networks: {sorted(allowed_network_codes)}")
+    if api_version:
+        logger.info(f"API version override: {api_version}")
     init_gam_client(
         credentials_path=credentials_path,
         network_code=default_network_code,
         application_name="GAM MCP Server",
         allowed_network_codes=allowed_network_codes,
+        api_version=api_version,
     )
 
 
