@@ -27,7 +27,7 @@ class GAMClient:
         self.network_code = network_code
         self.application_name = application_name
         self._client: Optional[ad_manager.AdManagerClient] = None
-        self._api_version = "v202502"
+        self._api_version = "v202602"
 
     def _get_client(self) -> ad_manager.AdManagerClient:
         """Get or create the Ad Manager client."""
