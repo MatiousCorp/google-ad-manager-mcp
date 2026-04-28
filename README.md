@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/matiouscorp-google-ad-manager-mcp-badge.png)](https://mseep.ai/app/matiouscorp-google-ad-manager-mcp)
+
 # Google Ad Manager MCP Server
 
 [![PyPI version](https://img.shields.io/pypi/v/google-ad-manager-mcp.svg)](https://pypi.org/project/google-ad-manager-mcp/)
