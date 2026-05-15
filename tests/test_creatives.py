@@ -1,5 +1,6 @@
 """Tests for creative tools."""
 
+import base64
 import pytest
 from unittest.mock import patch, MagicMock, mock_open
 from pathlib import Path
@@ -142,6 +143,261 @@ class TestUploadCreative:
         assert result["size"] == "1000x250"
         assert result["original_size"] == "970x250"
         assert result["override_size"] is True
+
+
+class TestUploadHtml5Creative:
+    """Tests for upload_html5_creative function."""
+
+    @patch("gam_mcp.tools.creatives.get_gam_client")
+    @patch("gam_mcp.tools.creatives.Path")
+    def test_returns_error_when_file_not_found(self, mock_path_class, mock_get_client):
+        """Test returns error when file doesn't exist."""
+        mock_path = MagicMock()
+        mock_path.exists.return_value = False
+        mock_path_class.return_value = mock_path
+
+        result = creatives.upload_html5_creative(
+            file_path="/path/to/missing.zip",
+            advertiser_id=123,
+            click_through_url="https://example.com",
+            width=320,
+            height=480
+        )
+
+        assert "error" in result
+        assert "not found" in result["error"]
+
+    @patch("gam_mcp.tools.creatives.get_gam_client")
+    @patch("gam_mcp.tools.creatives.Path")
+    def test_returns_error_when_not_zip(self, mock_path_class, mock_get_client):
+        """Test returns error when file is not a .zip."""
+        mock_path = MagicMock()
+        mock_path.exists.return_value = True
+        mock_path.name = "bundle.tar"
+        mock_path.suffix = ".tar"
+        mock_path_class.return_value = mock_path
+
+        result = creatives.upload_html5_creative(
+            file_path="/path/to/bundle.tar",
+            advertiser_id=123,
+            click_through_url="https://example.com",
+            width=320,
+            height=480
+        )
+
+        assert "error" in result
+        assert ".zip" in result["error"]
+
+    @patch("gam_mcp.tools.creatives.get_gam_client")
+    @patch("builtins.open", new_callable=mock_open, read_data=b"fake zip data")
+    @patch("gam_mcp.tools.creatives.Path")
+    def test_uploads_html5_creative_successfully(self, mock_path_class, mock_file, mock_get_client):
+        """Test successfully uploads an HTML5 creative."""
+        mock_path = MagicMock()
+        mock_path.exists.return_value = True
+        mock_path.name = "interstitial.zip"
+        mock_path.stem = "interstitial"
+        mock_path.suffix = ".zip"
+        mock_path_class.return_value = mock_path
+
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+
+        mock_service = MagicMock()
+        mock_service.createCreatives.return_value = [{
+            "id": 789,
+            "name": "HTML5 Creative - 320x480 - interstitial"
+        }]
+        mock_client.get_service.return_value = mock_service
+
+        result = creatives.upload_html5_creative(
+            file_path="/path/to/interstitial.zip",
+            advertiser_id=456,
+            click_through_url="https://example.com",
+            width=320,
+            height=480
+        )
+
+        assert result["id"] == 789
+        assert result["size"] == "320x480"
+        assert result["type"] == "Html5Creative"
+        assert result["is_safe_frame_compatible"] is True
+        assert "uploaded successfully" in result["message"]
+
+        payload = mock_service.createCreatives.call_args[0][0][0]
+        assert payload["xsi_type"] == "Html5Creative"
+        assert payload["html5Asset"]["fileName"] == "interstitial.zip"
+        assert payload["html5Asset"]["assetByteArray"] == base64.b64encode(b"fake zip data").decode("utf-8")
+        assert payload["size"] == {"width": 320, "height": 480, "isAspectRatio": False}
+        assert payload["destinationUrl"] == "https://example.com"
+        assert payload["isSafeFrameCompatible"] is True
+
+    @patch("gam_mcp.tools.creatives.get_gam_client")
+    @patch("builtins.open", new_callable=mock_open, read_data=b"fake zip data")
+    @patch("gam_mcp.tools.creatives.Path")
+    def test_uses_custom_creative_name(self, mock_path_class, mock_file, mock_get_client):
+        """Test user-supplied creative_name is passed through to the payload."""
+        mock_path = MagicMock()
+        mock_path.exists.return_value = True
+        mock_path.name = "bundle.zip"
+        mock_path.stem = "bundle"
+        mock_path.suffix = ".zip"
+        mock_path_class.return_value = mock_path
+
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+
+        mock_service = MagicMock()
+        mock_service.createCreatives.return_value = [{"id": 1, "name": "My Custom HTML5"}]
+        mock_client.get_service.return_value = mock_service
+
+        creatives.upload_html5_creative(
+            file_path="/path/to/bundle.zip",
+            advertiser_id=1,
+            click_through_url="https://example.com",
+            width=300,
+            height=250,
+            creative_name="My Custom HTML5"
+        )
+
+        payload = mock_service.createCreatives.call_args[0][0][0]
+        assert payload["name"] == "My Custom HTML5"
+
+    @patch("gam_mcp.tools.creatives.get_gam_client")
+    @patch("builtins.open", new_callable=mock_open, read_data=b"fake zip data")
+    @patch("gam_mcp.tools.creatives.Path")
+    def test_respects_safe_frame_compatible_false(self, mock_path_class, mock_file, mock_get_client):
+        """Test is_safe_frame_compatible=False flows through to the payload and result."""
+        mock_path = MagicMock()
+        mock_path.exists.return_value = True
+        mock_path.name = "bundle.zip"
+        mock_path.stem = "bundle"
+        mock_path.suffix = ".zip"
+        mock_path_class.return_value = mock_path
+
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+
+        mock_service = MagicMock()
+        mock_service.createCreatives.return_value = [{"id": 2, "name": "n"}]
+        mock_client.get_service.return_value = mock_service
+
+        result = creatives.upload_html5_creative(
+            file_path="/path/to/bundle.zip",
+            advertiser_id=1,
+            click_through_url="https://example.com",
+            width=300,
+            height=250,
+            is_safe_frame_compatible=False
+        )
+
+        payload = mock_service.createCreatives.call_args[0][0][0]
+        assert payload["isSafeFrameCompatible"] is False
+        assert result["is_safe_frame_compatible"] is False
+
+    @patch("gam_mcp.tools.creatives.get_gam_client")
+    @patch("builtins.open", new_callable=mock_open, read_data=b"fake zip data")
+    @patch("gam_mcp.tools.creatives.Path")
+    def test_returns_error_when_create_fails(self, mock_path_class, mock_file, mock_get_client):
+        """Test returns error when createCreatives returns empty."""
+        mock_path = MagicMock()
+        mock_path.exists.return_value = True
+        mock_path.name = "bundle.zip"
+        mock_path.stem = "bundle"
+        mock_path.suffix = ".zip"
+        mock_path_class.return_value = mock_path
+
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+
+        mock_service = MagicMock()
+        mock_service.createCreatives.return_value = []
+        mock_client.get_service.return_value = mock_service
+
+        result = creatives.upload_html5_creative(
+            file_path="/path/to/bundle.zip",
+            advertiser_id=456,
+            click_through_url="https://example.com",
+            width=300,
+            height=250
+        )
+
+        assert "error" in result
+        assert "Failed to create HTML5 creative" in result["error"]
+
+
+class TestUploadAndAssociateHtml5Creative:
+    """Tests for upload_and_associate_html5_creative function."""
+
+    @patch("gam_mcp.tools.creatives.associate_creative_with_line_item")
+    @patch("gam_mcp.tools.creatives.upload_html5_creative")
+    def test_uploads_and_associates_successfully(self, mock_upload, mock_associate):
+        """Test successfully uploads and associates HTML5 creative."""
+        mock_upload.return_value = {
+            "id": 789,
+            "name": "HTML5 Creative - 320x480",
+            "size": "320x480",
+            "type": "Html5Creative"
+        }
+        mock_associate.return_value = {
+            "creative_id": 789,
+            "line_item_id": 456,
+            "message": "associated"
+        }
+
+        result = creatives.upload_and_associate_html5_creative(
+            file_path="/path/to/interstitial.zip",
+            advertiser_id=123,
+            line_item_id=456,
+            click_through_url="https://example.com",
+            width=320,
+            height=480
+        )
+
+        assert result["creative_id"] == 789
+        assert result["line_item_id"] == 456
+        assert result["advertiser_id"] == 123
+        assert result["type"] == "Html5Creative"
+        assert "uploaded and associated" in result["message"]
+
+    @patch("gam_mcp.tools.creatives.upload_html5_creative")
+    def test_returns_upload_error(self, mock_upload):
+        """Test returns error when upload fails."""
+        mock_upload.return_value = {"error": "Upload failed"}
+
+        result = creatives.upload_and_associate_html5_creative(
+            file_path="/path/to/bundle.zip",
+            advertiser_id=123,
+            line_item_id=456,
+            click_through_url="https://example.com",
+            width=320,
+            height=480
+        )
+
+        assert "error" in result
+
+    @patch("gam_mcp.tools.creatives.associate_creative_with_line_item")
+    @patch("gam_mcp.tools.creatives.upload_html5_creative")
+    def test_returns_association_error(self, mock_upload, mock_associate):
+        """Test returns error when association fails."""
+        mock_upload.return_value = {
+            "id": 789,
+            "name": "HTML5 Creative",
+            "size": "320x480",
+            "type": "Html5Creative"
+        }
+        mock_associate.return_value = {"error": "Association failed"}
+
+        result = creatives.upload_and_associate_html5_creative(
+            file_path="/path/to/bundle.zip",
+            advertiser_id=123,
+            line_item_id=456,
+            click_through_url="https://example.com",
+            width=320,
+            height=480
+        )
+
+        assert "association_error" in result
 
 
 class TestAssociateCreativeWithLineItem:
